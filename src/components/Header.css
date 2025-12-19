@@ -1,0 +1,195 @@
+/* Sempre puxar esse css para cabeçalho e footer */
+/* Estilos padrões */
+
+/* Remove marcas e espaçamentos extras da lista */
+.menu, .menu ul {
+    list-style: none; 
+    padding: 0; 
+    margin: 0; 
+}
+
+/* Logo */
+.logo-container img {
+    width: 55px;
+    height: auto;
+    max-width: 100%;
+}
+
+/* Estilo Geral */
+
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%; 
+    width: 100%; 
+    background-color: #f9faf9;
+    background-size: cover; 
+    background-position: center; 
+    font-family: 'Roboto', sans-serif;
+    display: flex;
+    flex-direction: column; 
+    overflow-y: auto; 
+    overflow-x: hidden; 
+}
+
+/* Menu Principal */
+.menu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #0A0A33;
+    padding: 10px;
+    z-index: 1000;
+}
+
+.menu > li {
+    margin: 0 15px;
+    position: relative;
+}
+
+.menu > li > a {
+    text-decoration: none;
+    color: white;
+    padding: 10px 15px;
+    display: block;
+    transition: 0.3s;
+}
+
+header {
+    position: relative;
+    z-index: 1000;
+}
+
+.menu > li > a:hover {
+    color: #00D4FF;
+    text-decoration: underline;
+}
+
+/* Submenus */
+.submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #444;
+    border-radius: 5px;
+    min-width: 100px;
+    z-index: 1;
+}
+
+.menu li:hover .submenu {
+    display: block;
+}
+
+.submenu li a {
+    padding: 10px;
+    color: rgb(253, 252, 252);
+    display: block;
+    text-decoration: none;
+}
+
+/* Notificações */
+.bell-icon {
+    position: relative;
+    font-size: 20px;
+    margin-left: auto;
+}
+
+.menu .bell-icon {
+    margin-left: auto;
+}
+
+.bell-icon:hover {
+    color: #00D4FF;
+}
+
+.notification-bubble {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    width: 13px;
+    height: 13px;
+}
+
+.notification-menu {
+    display: none;
+    position: absolute;
+    top: 30px;
+    right: 0;
+    background-color: #444;
+    padding: 10px;
+    border-radius: 5px;
+    width: 200px;
+    z-index: 1000;
+}
+
+.notification-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.notification-menu ul li {
+    padding: 8px;
+    color: white;
+    border-bottom: 1px solid #666;
+}
+
+.notification-menu ul li a {
+    color: white;
+    text-decoration: none;
+}
+
+.notification-menu ul li a:hover {
+    background-color: #666;
+    color: #00D4FF;
+}
+
+.notification-menu ul li:hover {
+    background-color: #555;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto; 
+    }
+    .menu {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .menu > li {
+        width: 100%;
+        text-align: center;
+        margin: 5px 0;
+    }
+
+    .menu > li > a {
+        width: 100%;
+        padding: 10px 0;
+    }
+
+    .submenu {
+        position: static;
+        width: 100%;
+    }
+
+    .image-container {
+        height: 50vh;
+    }
+}
+
+@media (min-width: 1024px) {
+    .menu {
+        justify-content: space-around;
+    }
+}
+/* Para aparecer o sino só tirar essa parte */
+.bell-icon {
+    display: none !important;
+}
