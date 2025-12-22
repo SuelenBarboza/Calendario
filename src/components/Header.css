@@ -1,5 +1,9 @@
-/* Sempre puxar esse css para cabeçalho e footer */
-/* Estilos padrões */
+/* ===== RESET E CONFIGURAÇÕES GERAIS ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
 /* Remove marcas e espaçamentos extras da lista */
 .menu, .menu ul {
@@ -8,188 +12,387 @@
     margin: 0; 
 }
 
-/* Logo */
-.logo-container img {
-    width: 55px;
-    height: auto;
-    max-width: 100%;
+/* ===== LOGO ARREDONDADA ===== */
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Estilo Geral */
+.logo-container img {
+    width: 55px;
+    height: 55px;
+    max-width: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #00D4FF;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
 
+.logo-container img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 212, 255, 0.3);
+    border-color: #ffffff;
+}
+
+/* ===== ESTILO GERAL DO BODY ===== */
 body {
     margin: 0;
     padding: 0;
-    height: 100%; 
-    width: 100%; 
     background-color: #f9faf9;
-    background-size: cover; 
-    background-position: center; 
     font-family: 'Roboto', sans-serif;
     display: flex;
-    flex-direction: column; 
-    overflow-y: auto; 
-    overflow-x: hidden; 
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-/* Menu Principal */
+/* ===== HEADER ===== */
+header {
+    position: relative;
+    z-index: 1000;
+    background-color: #0A0A33;
+    width: 100%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== MENU PRINCIPAL ===== */
 .menu {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     background-color: #0A0A33;
-    padding: 10px;
+    padding: 8px 20px;
     z-index: 1000;
 }
 
 .menu > li {
-    margin: 0 15px;
     position: relative;
+    margin: 0 5px;
+}
+
+/* Primeiro item (logo) com mais espaçamento */
+.menu > li:first-child {
+    margin-right: 25px;
 }
 
 .menu > li > a {
     text-decoration: none;
     color: white;
-    padding: 10px 15px;
+    padding: 12px 16px;
     display: block;
-    transition: 0.3s;
-}
-
-header {
+    transition: all 0.3s ease;
+    font-weight: 500;
+    border-radius: 6px;
+    font-size: 15px;
     position: relative;
-    z-index: 1000;
 }
 
+/* Efeito hover nos itens do menu */
 .menu > li > a:hover {
     color: #00D4FF;
-    text-decoration: underline;
+    background-color: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
 }
 
-/* Submenus */
+/* Indicador visual para itens com submenu */
+.menu > li:has(.submenu) > a::after {
+    content: "▾";
+    margin-left: 6px;
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+/* ===== SUBMENUS ===== */
 .submenu {
     display: none;
     position: absolute;
     top: 100%;
     left: 0;
-    background-color: #444;
-    border-radius: 5px;
-    min-width: 100px;
-    z-index: 1;
+    background-color: #1a1a4a;
+    border-radius: 8px;
+    min-width: 240px;
+    z-index: 1000;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(0, 212, 255, 0.1);
+    overflow: hidden;
+    margin-top: 5px;
 }
 
 .menu li:hover .submenu {
     display: block;
+    animation: slideDown 0.3s ease forwards;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .submenu li a {
-    padding: 10px;
-    color: rgb(253, 252, 252);
+    padding: 14px 20px;
+    color: #e0e0ff;
     display: block;
     text-decoration: none;
+    transition: all 0.3s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 14px;
 }
 
-/* Notificações */
+.submenu li:last-child a {
+    border-bottom: none;
+}
+
+.submenu li a:hover {
+    background-color: rgba(0, 212, 255, 0.15);
+    color: #00D4FF;
+    padding-left: 25px;
+}
+
+/* ===== NOTIFICAÇÕES (ESCONDIDAS) ===== */
+.bell-icon {
+    display: none !important;
+}
+
+/* Mantendo o código das notificações comentado caso queira usar depois */
+/*
 .bell-icon {
     position: relative;
-    font-size: 20px;
     margin-left: auto;
 }
 
-.menu .bell-icon {
-    margin-left: auto;
+.bell-icon a {
+    color: white;
+    padding: 12px;
+    display: block;
+    transition: color 0.3s;
 }
 
-.bell-icon:hover {
+.bell-icon a:hover {
     color: #00D4FF;
 }
 
 .notification-bubble {
     position: absolute;
-    top: 10px;
-    right: 12px;
-    background-color: red;
-    color: white;
+    top: 8px;
+    right: 8px;
+    background-color: #ff4757;
     border-radius: 50%;
-    width: 13px;
-    height: 13px;
+    width: 8px;
+    height: 8px;
 }
 
 .notification-menu {
     display: none;
     position: absolute;
-    top: 30px;
+    top: 45px;
     right: 0;
-    background-color: #444;
-    padding: 10px;
-    border-radius: 5px;
-    width: 200px;
+    background-color: #1a1a4a;
+    border-radius: 8px;
+    width: 280px;
     z-index: 1000;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.notification-menu ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.bell-icon:hover .notification-menu {
+    display: block;
 }
+*/
 
-.notification-menu ul li {
-    padding: 8px;
-    color: white;
-    border-bottom: 1px solid #666;
-}
+/* ===== RESPONSIVIDADE ===== */
 
-.notification-menu ul li a {
-    color: white;
-    text-decoration: none;
-}
-
-.notification-menu ul li a:hover {
-    background-color: #666;
-    color: #00D4FF;
-}
-
-.notification-menu ul li:hover {
-    background-color: #555;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-    body {
-        overflow-y: auto; 
+/* Tablets */
+@media (max-width: 1024px) {
+    .menu {
+        padding: 8px 15px;
     }
+    
+    .menu > li {
+        margin: 0 4px;
+    }
+    
+    .menu > li > a {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+    
+    .logo-container img {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .menu > li:first-child {
+        margin-right: 20px;
+    }
+}
+
+/* Tablets pequenos e celulares grandes */
+@media (max-width: 900px) {
+    .menu {
+        justify-content: center;
+        padding: 8px 10px;
+    }
+    
+    .menu > li > a {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+    
+    .submenu {
+        min-width: 200px;
+    }
+}
+
+/* Celulares */
+@media (max-width: 768px) {
     .menu {
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
+        padding: 10px;
+        gap: 5px;
     }
-
+    
     .menu > li {
         width: 100%;
-        text-align: center;
-        margin: 5px 0;
+        margin: 0;
     }
-
+    
+    .menu > li:first-child {
+        margin: 0 0 10px 0;
+        text-align: center;
+        order: -1;
+    }
+    
     .menu > li > a {
         width: 100%;
-        padding: 10px 0;
+        padding: 14px 15px;
+        text-align: left;
+        border-radius: 6px;
+        background-color: rgba(255, 255, 255, 0.05);
+        margin-bottom: 2px;
     }
-
+    
+    .menu > li > a:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        transform: translateX(5px);
+    }
+    
+    .logo-container img {
+        width: 65px;
+        height: 65px;
+    }
+    
+    /* Indicador para mobile */
+    .menu > li:has(.submenu) > a::after {
+        content: "▸";
+        float: right;
+        font-size: 14px;
+        transition: transform 0.3s;
+    }
+    
+    .menu > li:hover > a::after {
+        transform: rotate(90deg);
+    }
+    
     .submenu {
         position: static;
         width: 100%;
+        margin: 5px 0 0 0;
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: none;
+        animation: none;
+        display: none;
     }
-
-    .image-container {
-        height: 50vh;
+    
+    .menu li:hover .submenu {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .submenu li a {
+        padding: 12px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .submenu li:last-child a {
+        border-bottom: none;
+    }
+    
+    /* Ajuste para o item "Sair" ficar visível */
+    .menu > li:last-child {
+        margin-top: 5px;
+    }
+    
+    .menu > li:last-child > a {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #ff6b6b;
+    }
+    
+    .menu > li:last-child > a:hover {
+        background-color: rgba(220, 53, 69, 0.3);
     }
 }
 
-@media (min-width: 1024px) {
+/* Celulares pequenos */
+@media (max-width: 480px) {
     .menu {
-        justify-content: space-around;
+        padding: 8px;
+    }
+    
+    .menu > li > a {
+        padding: 12px 15px;
+        font-size: 14px;
+    }
+    
+    .logo-container img {
+        width: 55px;
+        height: 55px;
+    }
+    
+    .submenu {
+        min-width: 100%;
     }
 }
-/* Para aparecer o sino só tirar essa parte */
-.bell-icon {
-    display: none !important;
+
+/* ===== MELHORIAS DE ACESSIBILIDADE ===== */
+
+/* Foco visível para navegação por teclado */
+.menu > li > a:focus {
+    outline: 2px solid #00D4FF;
+    outline-offset: 2px;
+}
+
+/* Melhor contraste para texto */
+.menu > li > a {
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Transição suave para todo o menu */
+.menu, .menu > li, .submenu {
+    transition: all 0.3s ease;
+}
+
+/* ===== ESTADO ATIVO PARA PÁGINA ATUAL ===== */
+/* Adicione a classe "active" ao item do menu correspondente à página atual */
+.menu > li > a.active {
+    background-color: rgba(0, 212, 255, 0.15);
+    color: #00D4FF;
+    font-weight: 600;
+}
+
+.menu > li > a.active::before {
+    content: "•";
+    margin-right: 8px;
+    color: #00D4FF;
 }

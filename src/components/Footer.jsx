@@ -1,49 +1,140 @@
-import './Footer.css';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import styled, { keyframes, createGlobalStyle } from 'styled-components';
 
-export default function Footer() {
+const Footer = () => {
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (email) {
+      // Aqui você pode adicionar a lógica de inscrição
+      console.log('Email inscrito:', email);
+      setSubscribed(true);
+      setEmail('');
+      setTimeout(() => setSubscribed(false), 3000);
+    }
+  };
+
+  const socialLinks = [
+    { icon: '📘', label: 'Facebook', url: '#' },
+    { icon: '📸', label: 'Instagram', url: '#' },
+    { icon: '🐦', label: 'Twitter', url: '#' },
+    { icon: '💼', label: 'LinkedIn', url: '#' },
+    { icon: '📺', label: 'YouTube', url: '#' }
+  ];
+
+  const quickLinks = [
+    { text: 'Sobre Nós', url: '/sobre' },
+    { text: 'Nossos Serviços', url: '/servicos' },
+    { text: 'Portfólio', url: '/portfolio' },
+    { text: 'Blog', url: '/blog' },
+    { text: 'Fale Conosco', url: '/contato' }
+  ];
+
+  const bottomLinks = [
+    { text: 'Política de Privacidade', url: '/privacidade' },
+    { text: 'Termos de Uso', url: '/termos' },
+    { text: 'Política de Cookies', url: '/cookies' },
+    { text: 'Mapa do Site', url: '/mapa' }
+  ];
+
+  const contactInfo = [
+    { icon: '📍', title: 'Endereço', content: 'Rua Exemplo, 123<br>São Paulo - SP' },
+    { icon: '📞', title: 'Telefone', content: '(11) 99999-9999' },
+    { icon: '✉️', title: 'Email', content: 'contato@innovatech.com' }
+  ];
+
   return (
-    <footer>
-      <div className="footer-container">
+    <>
+      <FooterStyles />
+      <FooterContainer>
+        <FooterContent>
+          
+          {/* Seção Contato */}
+          <FooterSection>
+            <SectionTitle>Contato</SectionTitle>
+            <ContactInfo>
+              {contactInfo.map((item, index) => (
+                <ContactItem key={index}>
+                  <ContactIcon>{item.icon}</ContactIcon>
+                  <ContactText>
+                    <strong>{item.title}:</strong>
+                    <div dangerouslySetInnerHTML={{ __html: item.content }} />
+                  </ContactText>
+                </ContactItem>
+              ))}
+            </ContactInfo>
+          </FooterSection>
 
-        <div className="footer-section about">
-          <h2>Sobre o Innovatech</h2>
-          <p>
-            O Innovatech é uma plataforma inovadora focada no desenvolvimento
-            tecnológico e soluções acadêmicas.
-          </p>
-        </div>
+          {/* Seção Links Rápidos */}
+          <FooterSection>
+            <SectionTitle>Links Rápidos</SectionTitle>
+            <LinksList>
+              {quickLinks.map((link, index) => (
+                <ListItem key={index}>
+                  <QuickLink to={link.url}>{link.text}</QuickLink>
+                </ListItem>
+              ))}
+            </LinksList>
+          </FooterSection>
 
-        <div className="footer-section contact">
-          <h2>Contato</h2>
-          <p><i className="fas fa-map-marker-alt"></i> Rua da Inovação, 123 - Araçatuba, SP</p>
-          <p><i className="fas fa-phone"></i> (18) 98765-4321</p>
-          <p><i className="fas fa-envelope"></i> contato@innovatech.com</p>
-        </div>
+          {/* Seção Redes Sociais */}
+          <FooterSection>
+            <SectionTitle>Siga-nos</SectionTitle>
+            <SocialText>Conecte-se conosco nas redes sociais</SocialText>
+            <SocialLinks>
+              {socialLinks.map((social, index) => (
+                <SocialIcon 
+                  key={index}
+                  href={social.url}
+                  aria-label={social.label}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {social.icon}
+                </SocialIcon>
+              ))}
+            </SocialLinks>
+          </FooterSection>
 
-        <div className="footer-section links">
-          <h2>Links Úteis</h2>
-          <ul>
-            <li><a href="#">Sobre Nós</a></li>
-            <li><a href="#">Projetos</a></li>
-            <li><a href="#">Suporte</a></li>
-            <li><a href="#">Contato</a></li>
-            <li><a href="#">Política de Privacidade</a></li>
-          </ul>
-        </div>
+          {/* Seção Newsletter */}
+          <FooterSection>
+            <SectionTitle>Newsletter</SectionTitle>
+            <NewsletterText>Receba nossas novidades por email</NewsletterText>
+            <NewsletterForm onSubmit={handleSubmit}>
+              <NewsletterInput
+                type="email"
+                placeholder="Seu melhor email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <NewsletterButton type="submit">
+                {subscribed ? '✓ Inscrito!' : 'Inscrever'}
+              </NewsletterButton>
+              {subscribed && <SuccessMessage>Obrigado pela inscrição!</SuccessMessage>}
+            </NewsletterForm>
+          </FooterSection>
 
-        <div className="footer-section social">
-          <h2>Siga-nos</h2>
-          <a href="#"><i className="fab fa-facebook"></i></a>
-          <a href="#"><i className="fab fa-instagram"></i></a>
-          <a href="#"><i className="fab fa-linkedin"></i></a>
-          <a href="#"><i className="fab fa-twitter"></i></a>
-        </div>
+        </FooterContent>
 
-      </div>
+        {/* Rodapé Inferior */}
+        <FooterBottom>
+          <Copyright>
+            © {new Date().getFullYear()} Innovatech. Todos os direitos reservados.
+          </Copyright>
+          <BottomLinks>
+            {bottomLinks.map((link, index) => (
+              <BottomLink key={index} to={link.url}>
+                {link.text}
+              </BottomLink>
+            ))}
+          </BottomLinks>
+        </FooterBottom>
 
-      <div className="footer-bottom">
-        <p>&copy; 2025 Innovatech. Todos os direitos reservados.</p>
-      </div>
-    </footer>
+      </FooterContainer>
+    </>
   );
-}
+};
