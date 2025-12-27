@@ -69,7 +69,7 @@ footer::before {
     border-radius: 2px;
 }
 
-/* Informações de contato */
+/* ===== SEÇÃO CONTATO ===== */
 .contact-info {
     display: flex;
     flex-direction: column;
@@ -92,13 +92,26 @@ footer::before {
     font-size: 1.2rem;
     min-width: 24px;
     text-align: center;
+    display: flex;
+    align-items: center;
 }
 
-/* Links rápidos */
+.contact-icon svg {
+    transition: transform 0.3s ease;
+}
+
+.contact-item:hover .contact-icon svg {
+    transform: scale(1.1);
+}
+
+/* ===== SEÇÃO LINKS RÁPIDOS ===== */
 .links-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
 .links-list li {
@@ -147,52 +160,122 @@ footer::before {
     width: 100%;
 }
 
-/* Redes sociais */
+/* ===== SEÇÃO REDES SOCIAIS ===== */
 .social-links {
     display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
     gap: 15px;
     margin-top: 20px;
+    justify-content: flex-start;
+    align-items: center;
 }
 
 .social-icon {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 45px;
     height: 45px;
-    background: rgba(255, 255, 255, 0.1);
     border-radius: 50%;
     color: white;
-    font-size: 1.3rem;
     transition: all 0.3s ease;
     text-decoration: none;
     position: relative;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
-.social-icon::before {
+.social-icon svg {
+    width: 22px;
+    height: 22px;
+    transition: all 0.3s ease;
+    fill: white;
+}
+
+/* Cores oficiais das redes sociais */
+.social-icon.facebook {
+    background: #1877F2;
+}
+
+.social-icon.instagram {
+    background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D, #F56040, #F77737, #FCAF45, #FFDC80);
+}
+
+.social-icon.twitter {
+    background: #000000;
+}
+
+.social-icon.linkedin {
+    background: #0A66C2;
+}
+
+.social-icon.youtube {
+    background: #FF0000;
+}
+
+/* Estados normais dos ícones */
+.social-icon {
+    opacity: 0.9;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Efeito hover */
+.social-icon:hover {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.social-icon:hover svg {
+    transform: scale(1.1);
+}
+
+/* Efeitos específicos para cada rede no hover */
+.social-icon.facebook:hover {
+    background: #166FE5;
+    box-shadow: 0 8px 15px rgba(24, 119, 242, 0.3);
+}
+
+.social-icon.instagram:hover {
+    box-shadow: 0 8px 15px rgba(225, 48, 108, 0.3);
+}
+
+.social-icon.twitter:hover {
+    background: #1C1C1C;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+}
+
+.social-icon.linkedin:hover {
+    background: #004182;
+    box-shadow: 0 8px 15px rgba(10, 102, 194, 0.3);
+}
+
+.social-icon.youtube:hover {
+    background: #CC0000;
+    box-shadow: 0 8px 15px rgba(255, 0, 0, 0.3);
+}
+
+/* Efeito de brilho sutil */
+.social-icon::after {
     content: '';
     position: absolute;
     top: 0;
     left: -100%;
-    width: 100%;
+    width: 50%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.6s ease;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.2), 
+        transparent);
+    transition: left 0.7s ease;
 }
 
-.social-icon:hover::before {
+.social-icon:hover::after {
     left: 100%;
 }
 
-.social-icon:hover {
-    background: #00D4FF;
-    color: #0A0A33;
-    transform: translateY(-5px) rotate(360deg);
-    box-shadow: 0 10px 20px rgba(0, 212, 255, 0.3);
-}
-
-/* Newsletter */
+/* ===== SEÇÃO NEWSLETTER ===== */
 .newsletter-form {
     display: flex;
     gap: 10px;
@@ -328,6 +411,17 @@ footer::before {
     
     .social-links {
         justify-content: flex-start;
+        gap: 12px;
+    }
+    
+    .social-icon {
+        width: 42px;
+        height: 42px;
+    }
+    
+    .social-icon svg {
+        width: 20px;
+        height: 20px;
     }
     
     .newsletter-form {
@@ -360,19 +454,52 @@ footer::before {
         margin-bottom: 15px;
     }
     
+    .social-links {
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
     .social-icon {
         width: 40px;
         height: 40px;
-        font-size: 1.1rem;
+    }
+    
+    .social-icon svg {
+        width: 18px;
+        height: 18px;
     }
     
     .contact-item {
         font-size: 0.9rem;
     }
     
+    .newsletter-input,
+    .newsletter-button {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+    
     .footer-bottom {
         font-size: 0.85rem;
         padding: 15px 10px 0;
+    }
+}
+
+/* Para telas muito pequenas */
+@media (max-width: 360px) {
+    .social-icon {
+        width: 38px;
+        height: 38px;
+    }
+    
+    .social-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .social-links {
+        gap: 8px;
     }
 }
 
@@ -409,4 +536,18 @@ input:focus {
 /* ===== SCROLL SMOOTH ===== */
 html {
     scroll-behavior: smooth;
+}
+
+/* ===== GARANTIR QUE OS ÍCONES NÃO FICAM EM LISTA ===== */
+.social-links,
+.social-links * {
+    list-style-type: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+}
+
+.social-icon {
+    display: inline-flex !important;
+    float: none !important;
 }
