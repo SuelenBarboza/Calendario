@@ -9,137 +9,67 @@ const CalendarSystem = () => {
   const [viewMode, setViewMode] = useState('month'); // month, week, day, year
 
   // Dados de exemplo otimizados
-  const sampleData = useMemo(() => ({
-    projects: [
-      {
-        id: 1,
-        nome: "Data from KOLUNGIA",
-        descricao: "Dados do projeto KOLUNGIA",
-        data_inicio: "2019-07-06",
-        data_fim: "2019-07-06",
-        alunos: ["Equipe KOLUNGIA"],
-        professores: ["Coord. KOLUNGIA"],
-        tipo: "pesquisa"
-      },
-      {
-        id: 2,
-        nome: "Data from LONG",
-        descricao: "Dados do projeto LONG",
-        data_inicio: "2020-01-09",
-        data_fim: "2020-01-09",
-        alunos: ["Equipe LONG"],
-        professores: ["Coord. LONG"],
-        tipo: "desenvolvimento"
-      },
-      {
-        id: 3,
-        nome: "Data from YANG",
-        descricao: "Dados do projeto YANG",
-        data_inicio: "2021-02-04",
-        data_fim: "2021-02-04",
-        alunos: ["Equipe YANG"],
-        professores: ["Coord. YANG"],
-        tipo: "analise"
-      },
-      {
-        id: 4,
-        nome: "Data from GANHEN",
-        descricao: "Dados do projeto GANHEN",
-        data_inicio: "2024-06-01",
-        data_fim: "2024-06-01",
-        alunos: ["Equipe GANHEN"],
-        professores: ["Coord. GANHEN"],
-        tipo: "implementacao"
-      }
-    ],
-    timeSlots: [
-      {
-        id: 1, versao: "Planejamento de Projeto", tipo: "", 
-        horarios: [
-          { hora: "8:30 – 9:00 AM", atividade: "Inicio do Projeto" },
-          { hora: "14:30 – 15:00 PM", atividade: "Comentário - Layout" }
-        ],
-        data: "2024-06-06", diaSemana: "Quinta-Feira"
-      },
-      {
-        id: 2, versao: "", tipo: "Tarefa", 
-        horarios: [
-          { hora: "10:30 – 11:00 AM", atividade: "Criação do Layout" }
-        ],
-        data: "2024-06-10", diaSemana: "Segunda-Feira"
-      },
-      {
-        id: 3, versao: "", tipo: "", 
-        horarios: [
-          { hora: "9:00 – 10:00 AM", atividade: "Comentário - Talita" },
-          { hora: "10:15 – 11:00 AM", atividade: "Tarefa - BPMN" },
-          { hora: "19:00 – 20:00 PM", atividade: "Tarefa - Mockup" }
-        ],
-        data: "2024-06-13", diaSemana: "Quinta-Feira"
-      },
-      {
-        id: 4, versao: "", tipo: "Comentário", 
-        horarios: [
-          { hora: "08:45 – 07:00 AM", atividade: "Eliseu" }
-        ],
-        data: "2024-06-19", diaSemana: "Quarta-Feira"
-      },
-      {
-        id: 5, versao: "Atraso", tipo: "", 
-        horarios: [
-          { hora: "16:00 PM", atividade: "Mockup" }
-        ],
-        data: "2024-06-21", diaSemana: "Sexta-Feira"
-      },
-      {
-        id: 6, versao: "Finalização", tipo: "", 
-        horarios: [
-          { hora: "18:00 PM", atividade: "" } 
-        ],
-        data: "2024-06-28", diaSemana: "Sexta-Feira"
-      }
-    ]
-  }), []);
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const res = await fetch('/Config/getCalendarData.php'); // ajuste o caminho
+      const data = await res.json();
+      setProjects(data.projects);
+      setTimeSlots(data.timeSlots);
+    } catch (err) {
+      console.error("Erro ao buscar dados do calendário:", err);
+    }
+  };
 
-  useEffect(() => {
-    setProjects(sampleData.projects);
-    setTimeSlots(sampleData.timeSlots);
-  }, [sampleData]);
+  fetchData();
+}, []);
 
-  // Converter projetos para eventos do calendário
-  const calendarEvents = useMemo(() => {
-    const events = {};
-    
-    projects.forEach(project => {
-      const startDate = new Date(project.data_inicio);
-      const startKey = startDate.toISOString().split('T')[0];
-      
-      if (!events[startKey]) events[startKey] = [];
-      events[startKey].push({
-        type: 'event',
-        project: project,
-        title: project.nome,
-        color: '#4299e1'
+
+
+
+// Converter projetos e horários para eventos do calendário
+const calendarEvents = useMemo(() => {
+  const events = {};
+
+  // 🔹 PROJETOS
+  projects.forEach(project => {
+    if (!project.data_inicio) return;
+
+    // NÃO usa new Date aqui
+    const key = project.data_inicio; // yyyy-mm-dd
+
+    if (!events[key]) events[key] = [];
+
+    events[key].push({
+      type: 'project',
+      title: project.nome,
+      project,
+      color: '#4299e1'
+    });
+  });
+
+  // 🔹 HORÁRIOS
+  timeSlots.forEach(slot => {
+    if (!slot.data || !slot.horarios) return;
+
+    const key = slot.data; // yyyy-mm-dd
+
+    if (!events[key]) events[key] = [];
+
+    slot.horarios.forEach(horario => {
+      events[key].push({
+        type: 'time-slot',
+        title: `${horario.hora} - ${horario.atividade}`,
+        slot,
+        horario,
+        color: '#48bb78'
       });
     });
+  });
 
-    timeSlots.forEach(slot => {
-      const dateKey = slot.data;
-      if (!events[dateKey]) events[dateKey] = [];
-      
-      slot.horarios.forEach(horario => {
-        events[dateKey].push({
-          type: 'time-slot',
-          slot: slot,
-          horario: horario,
-          title: horario.atividade,
-          color: '#48bb78'
-        });
-      });
-    });
-    
-    return events;
-  }, [projects, timeSlots]);
+  return events;
+}, [projects, timeSlots]);
+
 
   // Navigation handlers
   const navigateMonth = useCallback((increment) => {
@@ -187,7 +117,9 @@ const CalendarSystem = () => {
           });
         case 'week':
           const startOfWeek = new Date(currentDate);
-          startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+          const day = currentDate.getDay();
+          const diff = day === 0 ? -6 : 1 - day;
+          startOfWeek.setDate(currentDate.getDate() + diff);
           const endOfWeek = new Date(startOfWeek);
           endOfWeek.setDate(startOfWeek.getDate() + 6);
           
