@@ -6,23 +6,44 @@ const CalendarSystem = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [projects, setProjects] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
-  const [viewMode, setViewMode] = useState('month'); // month, week, day, year
+  const [viewMode, setViewMode] = useState('month'); 
+  const [selectedProjectId, setSelectedProjectId] = useState('all');
+  const [allProjects, setAllProjects] = useState([]);
+
+
+  
 
   // Dados de exemplo otimizados
- useEffect(() => {
+useEffect(() => {
   const fetchData = async () => {
     try {
-      const res = await fetch('/Config/getCalendarData.php'); // ajuste o caminho
-      const data = await res.json();
-      setProjects(data.projects);
-      setTimeSlots(data.timeSlots);
+      const url =
+        selectedProjectId === 'all'
+          ? 'http://localhost/Innovatech/Config/getCalendarData.php'
+          : `http://localhost/Innovatech/Config/getCalendarData.php?projeto_id=${selectedProjectId}`;
+
+      const res = await fetch(url);
+      const text = await res.text();
+
+      if (text.trim().startsWith('<')) {
+        throw new Error('O PHP retornou HTML, não JSON');
+      }
+
+      const data = JSON.parse(text);
+
+      setAllProjects(data.allProjects || []);
+      setProjects(data.projects || []);
+      setTimeSlots(data.timeSlots || []);
+
     } catch (err) {
-      console.error("Erro ao buscar dados do calendário:", err);
+      console.error('Erro ao buscar dados do calendário:', err);
     }
   };
 
   fetchData();
-}, []);
+}, [selectedProjectId]); // 🔥 AQUI ESTÁ O SEGREDO
+
+
 
 
 
@@ -32,11 +53,18 @@ const calendarEvents = useMemo(() => {
   const events = {};
 
   // 🔹 PROJETOS
-  projects.forEach(project => {
-    if (!project.data_inicio) return;
+ projects.forEach(project => {
+  if (!project.data_inicio || !project.data_fim) return;
 
-    // NÃO usa new Date aqui
-    const key = project.data_inicio; // yyyy-mm-dd
+  let start = new Date(project.data_inicio);
+  let end = new Date(project.data_fim);
+
+  for (
+    let d = new Date(start);
+    d <= end;
+    d.setDate(d.getDate() + 1)
+  ) {
+    const key = d.toISOString().split('T')[0];
 
     if (!events[key]) events[key] = [];
 
@@ -46,7 +74,9 @@ const calendarEvents = useMemo(() => {
       project,
       color: '#4299e1'
     });
-  });
+  }
+});
+
 
   // 🔹 HORÁRIOS
   timeSlots.forEach(slot => {
@@ -95,7 +125,7 @@ const calendarEvents = useMemo(() => {
   }, []);
 
   // Header Component
-  const CalendarHeader = () => {
+ const CalendarHeader = ({ allProjects, selectedProjectId, setSelectedProjectId, viewMode, setViewMode, currentDate, goToToday, navigateDay, navigateWeek, navigateMonth, navigateYear }) => {
     const getNavigationHandler = () => {
       switch (viewMode) {
         case 'day': return navigateDay;
@@ -143,11 +173,27 @@ const calendarEvents = useMemo(() => {
 
     return (
       <div className="calendar-header">
-        <div className="header-left">
-          <div className="project-stats">
-            {projects.length} Projetos • {timeSlots.length} Horários
-          </div>
-        </div>
+        
+     <div className="project-selector">
+        <select
+          value={selectedProjectId}
+          onChange={(e) => setSelectedProjectId(e.target.value)}
+        >
+          <option value="">Selecione um projeto</option>
+
+          {allProjects.map(p => (
+            <option key={p.id} value={p.id}>
+              {p.nome}
+            </option>
+          ))}
+        </select>
+
+
+      </div>
+
+
+
+
         
         <div className="header-center">
           <button onClick={() => navigate(-1)}>‹</button>
@@ -190,7 +236,7 @@ const calendarEvents = useMemo(() => {
 
   // Mini Calendar Component
   const MiniCalendar = () => {
-    const [miniDate, setMiniDate] = useState(new Date());
+     const miniDate = currentDate;
     
     const getDaysInMonth = useCallback((date) => {
       return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -201,8 +247,13 @@ const calendarEvents = useMemo(() => {
     }, []);
 
     const changeMonth = useCallback((increment) => {
-      setMiniDate(new Date(miniDate.getFullYear(), miniDate.getMonth() + increment, 1));
-    }, [miniDate]);
+      setCurrentDate(new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + increment,
+        1
+      ));
+    }, [currentDate]);
+
 
     const renderMiniCalendar = useCallback(() => {
       const daysInMonth = getDaysInMonth(miniDate);
@@ -256,8 +307,8 @@ const calendarEvents = useMemo(() => {
         </div>
         
         <div className="mini-weekdays">
-          {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => (
-            <div key={day} className="mini-weekday">{day}</div>
+          {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, index) => (
+          <div key={index} className="mini-weekday">{day}</div>
           ))}
         </div>
         
@@ -272,18 +323,30 @@ const calendarEvents = useMemo(() => {
   const TimeSlotsPanel = () => {
     // Exibir todos os slots, ordenados por data, como uma agenda
     const agendaSlots = useMemo(() => {
-        return [...timeSlots].sort((a, b) => new Date(a.data) - new Date(b.data));
+      const grouped = {};
+
+      timeSlots.forEach(slot => {
+        if (!grouped[slot.data]) {
+          grouped[slot.data] = [];
+        }
+        grouped[slot.data].push(slot);
+      });
+
+      return Object.entries(grouped).sort(
+        ([a], [b]) => new Date(a) - new Date(b)
+      );
     }, [timeSlots]);
+
 
     // Helper para mapear cores dos dots (baseado nas cores da imagem)
     const getColor = (slotId) => {
         const colors = {
-            1: '#48bb78', // 06/06 - Green dot (Início do Projeto)
-            2: '#805ad5', // 10/06 - Purple dot (Criação do Layout)
-            3: '#4299e1', // 13/06 - Blue dot (Talita/BPMN/Mockup)
-            4: '#4299e1', // 19/06 - Blue dot (Eliseu)
-            5: '#ed8936', // 21/06 - Orange dot (Atraso - Mockup)
-            6: '#f56565', // 28/06 - Red dot (Finalização)
+            1: '#48bb78', 
+            2: '#805ad5', 
+            3: '#4299e1', 
+            4: '#4299e1', 
+            5: '#ed8936', 
+            6: '#f56565', 
         };
         return colors[slotId] || '#cbd5e0';
     };
@@ -294,11 +357,11 @@ const calendarEvents = useMemo(() => {
 
         <div className="time-slots-list-agenda">
           {agendaSlots.length > 0 ? (
-            agendaSlots.map((slot, mainIndex) => (
+            agendaSlots.map(([data, slots], mainIndex) => (
               <div key={slot.id} className="agenda-day-group">
                 {/* Cabeçalho do Dia (Quinta-Feira 06/06/2024) */}
                 <div className="agenda-day-header">
-                  <span>{slot.diaSemana} - {new Date(slot.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                  <span>{new Date(data).toLocaleDateString('pt-BR', {weekday: 'long',day: '2-digit',month: '2-digit',year: 'numeric'})}</span>
                   {/* Informação de clima, apenas para o primeiro dia, como na imagem */}
                   {mainIndex === 0 && <span className="weather-info">25°/35°☀️</span>}
                 </div>
@@ -309,13 +372,15 @@ const calendarEvents = useMemo(() => {
                 )}
                 
                 {/* Slots Individuais */}
-                {slot.horarios.map((horario, horarioIndex) => (
-                    <div key={horarioIndex} className="horario-item-image">
-                        <span className="dot" style={{ backgroundColor: getColor(slot.id) }}></span>
-                        <span className="time-agenda">{horario.hora}</span>
-                        <span className="activity-agenda">{horario.atividade || slot.tipo}</span>
+                {slots.map(slot =>
+                  slot.horarios.map((horario, index) => (
+                    <div key={index} className="horario-item-image">
+                      <span className="dot" style={{ backgroundColor: getColor(slot.id) }}></span>
+                      <span className="time-agenda">{horario.hora}</span>
+                      <span className="activity-agenda">{horario.atividade || slot.tipo}</span>
                     </div>
-                ))}
+                  ))
+                )}
               </div>
             ))
           ) : (
@@ -350,19 +415,19 @@ const calendarEvents = useMemo(() => {
 
       for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-        const dateKey = date.toISOString().split('T')[0];
+        const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const dayEvents = calendarEvents[dateKey] || [];
         const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
         const isToday = date.toDateString() === new Date().toDateString();
         
         days.push(
           <div
-            key={day}
+            key={date.toISOString()}
             className={`calendar-day 
               ${isSelected ? 'selected' : ''}
               ${isToday ? 'today' : ''}
             `}
-            onClick={() => setSelectedDate(date)}
+            onClick={() => {setSelectedDate(date);setCurrentDate(date);}}
           >
             <div className="day-header">
               <div className="day-number">{day}</div>
@@ -460,18 +525,18 @@ const calendarEvents = useMemo(() => {
             <React.Fragment key={time}>
               <div className="time-slot">{time}</div>
               {weekDays.map((day, dayIndex) => {
-                const dateKey = day.toISOString().split('T')[0];
+                const dateKey = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
                 const dayEvents = calendarEvents[dateKey] || [];
                 const timeEvents = dayEvents.filter(event => 
                   event.type === 'time-slot' && 
-                  event.horario.hora.includes(time.substring(0, 2))
+                  event.horario.hora.split(':')[0] === time.substring(0, 2)
                 );
                 
                 return (
                   <div 
-                    key={dayIndex} 
+                    key={day.toISOString()} 
                     className={`week-day-cell ${timeEvents.length > 0 ? 'has-event' : ''}`}
-                    onClick={() => setSelectedDate(day)}
+                    onClick={() => {setSelectedDate(day);setCurrentDate(day);}}
                   >
                     {timeEvents.map((event, eventIndex) => (
                       <div key={eventIndex} className="week-event">
@@ -489,239 +554,279 @@ const calendarEvents = useMemo(() => {
   };
 
   // Day View Component
-  const DayView = () => {
-    const timeSlots = useMemo(() => {
-      const slots = [];
-      for (let hour = 0; hour < 24; hour++) {
-        slots.push(`${hour.toString().padStart(2, '0')}:00`);
-      }
-      return slots;
-    }, []);
+const DayView = () => {
+  const timeSlots = useMemo(() => {
+    const slots = [];
+    for (let hour = 0; hour < 24; hour++) {
+      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+    }
+    return slots;
+  }, []);
 
-    const dayEvents = useMemo(() => {
-      if (!selectedDate) return [];
-      const dateKey = selectedDate.toISOString().split('T')[0];
-      return calendarEvents[dateKey] || [];
-    }, [selectedDate, calendarEvents]);
+  const dayEvents = useMemo(() => {
+    if (!selectedDate) return [];
 
-    return (
-      <div className="calendar-view day-view">
-        <div className="day-header">
-          <h2>{selectedDate ? selectedDate.toLocaleDateString('pt-BR', { 
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-          }) : 'Selecione uma data'}</h2>
-        </div>
-        
-        <div className="day-grid">
-          {timeSlots.map((time) => (
-            <React.Fragment key={time}>
-              <div className="day-time-slot">{time}</div>
-              <div className="day-event-slot">
-                {dayEvents
-                  .filter(event => event.type === 'time-slot' && event.horario.hora.includes(time.substring(0, 2)))
-                  .map((event, index) => (
-                    <div key={index} className="day-event">
-                      <strong>{event.horario.hora}</strong> - {event.horario.atividade}
-                    </div>
-                  ))
-                }
-              </div>
-            </React.Fragment>
-          ))}
-        </div>
+    const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+    return calendarEvents[dateKey] || [];
+  }, [selectedDate, calendarEvents]);
+
+  return (
+    <div className="calendar-view day-view">
+      <div className="day-header">
+        <h2>
+          {selectedDate
+            ? selectedDate.toLocaleDateString('pt-BR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })
+            : 'Selecione uma data'}
+        </h2>
       </div>
-    );
-  };
 
-  // Year View Component
-  const YearView = () => {
-    const months = useMemo(() => {
-      return Array.from({ length: 12 }, (_, i) => 
-        new Date(currentDate.getFullYear(), i, 1)
-      );
-    }, [currentDate]);
+      <div className="day-grid">
+        {timeSlots.map((time) => (
+          <React.Fragment key={time}>
+            <div className="day-time-slot">{time}</div>
 
-    const getDaysInMonth = (date) => {
-      return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-    };
-
-    const getFirstDayOfMonth = (date) => {
-      return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-    };
-
-    const renderMonth = (monthDate) => {
-      const daysInMonth = getDaysInMonth(monthDate);
-      const firstDay = getFirstDayOfMonth(monthDate);
-      const days = [];
-
-      for (let i = 0; i < firstDay; i++) {
-        days.push(<div key={`empty-${i}`} className="year-day empty"></div>);
-      }
-
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
-        const dateKey = date.toISOString().split('T')[0];
-        const dayEvents = calendarEvents[dateKey] || [];
-        const isToday = date.toDateString() === new Date().toDateString();
-        
-        days.push(
-          <div
-            key={day}
-            className={`year-day 
-              ${isToday ? 'today' : ''}
-              ${dayEvents.length > 0 ? 'has-event' : ''}
-            `}
-            onClick={() => {
-              setSelectedDate(date);
-              setViewMode('month');
-              setCurrentDate(date);
-            }}
-            title={`${day}/${monthDate.getMonth() + 1}`}
-          >
-            {day}
-          </div>
-        );
-      }
-
-      return days;
-    };
-
-    return (
-      <div className="calendar-view year-view">
-        {months.map((month, index) => (
-          <div key={index} className="year-month">
-            <div className="year-month-header">
-              {month.toLocaleString('pt-BR', { month: 'long' })}
+            <div className="day-event-slot">
+              {dayEvents
+                .filter(
+                  event =>
+                    event.type === 'time-slot' &&
+                    event.horario.hora.split(':')[0] === time.substring(0, 2)
+                )
+                .map((event, index) => (
+                  <div
+                    key={`${event.horario.hora}-${index}`}
+                    className="day-event"
+                  >
+                    <strong>{event.horario.hora}</strong> — {event.horario.atividade}
+                  </div>
+                ))}
             </div>
-            <div className="mini-weekdays">
-              {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => (
-                <div key={day} className="mini-weekday">{day}</div>
-              ))}
-            </div>
-            <div className="year-month-days">
-              {renderMonth(month)}
-            </div>
-          </div>
+          </React.Fragment>
         ))}
       </div>
+    </div>
+  );
+};
+
+
+  // Year View Component
+const YearView = () => {
+  const months = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) =>
+      new Date(currentDate.getFullYear(), i, 1)
     );
+  }, [currentDate]);
+
+  const getDaysInMonth = (date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   };
 
-  // Information Panel Component
-  const InfoPanel = () => {
-    const dayEvents = useMemo(() => {
-      if (!selectedDate) return [];
-      const dateKey = selectedDate.toISOString().split('T')[0];
-      return calendarEvents[dateKey] || [];
-    }, [selectedDate, calendarEvents]);
+  const getFirstDayOfMonth = (date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  };
 
-    const projectEvents = useMemo(() => 
-      dayEvents.filter(event => event.type === 'event'), 
-    [dayEvents]);
+  const renderMonth = (monthDate) => {
+    const daysInMonth = getDaysInMonth(monthDate);
+    const firstDay = getFirstDayOfMonth(monthDate);
+    const days = [];
 
-    const timeSlotEvents = useMemo(() => 
-      dayEvents.filter(event => event.type === 'time-slot'), 
-    [dayEvents]);
+    for (let i = 0; i < firstDay; i++) {
+      days.push(
+        <div
+          key={`empty-${monthDate.getMonth()}-${i}`}
+          className="year-day empty"
+        ></div>
+      );
+    }
 
-    if (!selectedDate) {
-      return (
-        <div className="info-panel">
-          <h3>Detalhes da Data</h3>
-          <div className="no-selection">
-            <span className="select-icon">📅</span>
-            <p>Selecione uma data para ver os detalhes</p>
-          </div>
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(
+        monthDate.getFullYear(),
+        monthDate.getMonth(),
+        day
+      );
+
+      const dateKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+      const dayEvents = calendarEvents[dateKey] || [];
+      const isToday = date.toDateString() === new Date().toDateString();
+
+      days.push(
+        <div
+          key={`${monthDate.getMonth()}-${day}`}
+          className={`year-day 
+            ${isToday ? 'today' : ''}
+            ${dayEvents.length > 0 ? 'has-event' : ''}
+          `}
+          onClick={() => {
+            setSelectedDate(date);
+            setCurrentDate(date);
+            setViewMode('month');
+          }}
+          title={`${day}/${monthDate.getMonth() + 1}`}
+        >
+          {day}
         </div>
       );
     }
 
+    return days;
+  };
+
+  return (
+    <div className="calendar-view year-view">
+      {months.map((month) => (
+        <div key={month.toISOString()} className="year-month">
+          <div className="year-month-header">
+            {month.toLocaleString('pt-BR', { month: 'long' })}
+          </div>
+
+          <div className="mini-weekdays">
+            {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day) => (
+              <div key={day} className="mini-weekday">
+                {day}
+              </div>
+            ))}
+          </div>
+
+          <div className="year-month-days">{renderMonth(month)}</div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+
+ // Information Panel Component
+const InfoPanel = () => {
+  const dayEvents = useMemo(() => {
+    if (!selectedDate) return [];
+
+    const dateKey = `${selectedDate.getFullYear()}-${String(
+      selectedDate.getMonth() + 1
+    ).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+
+    return calendarEvents[dateKey] || [];
+  }, [selectedDate, calendarEvents]);
+
+  const projectEvents = useMemo(
+    () => dayEvents.filter(event => event.type === 'event'),
+    [dayEvents]
+  );
+
+  const timeSlotEvents = useMemo(
+    () => dayEvents.filter(event => event.type === 'time-slot'),
+    [dayEvents]
+  );
+
+  if (!selectedDate) {
     return (
       <div className="info-panel">
-        <h3>Detalhes - {selectedDate.toLocaleDateString('pt-BR')}</h3>
-        
-        <div className="date-summary">
-          <div className="summary-item">
-            <span className="summary-count">{projectEvents.length}</span>
-            <span className="summary-label">Projetos</span>
-          </div>
-          <div className="summary-item">
-            <span className="summary-count">{timeSlotEvents.length}</span>
-            <span className="summary-label">Horários</span>
-          </div>
-          <div className="summary-item">
-            <span className="summary-count">{dayEvents.length}</span>
-            <span className="summary-label">Total</span>
-          </div>
+        <h3>Detalhes da Data</h3>
+        <div className="no-selection">
+          <span className="select-icon">📅</span>
+          <p>Selecione uma data para ver os detalhes</p>
         </div>
-
-        {projectEvents.length > 0 && (
-          <div className="events-section">
-            <h4>Projetos do Dia</h4>
-            {projectEvents.map((event, index) => (
-              <div key={index} className="project-card">
-                <div className="project-header">
-                  <h5>{event.project.nome.replace('Data from ', '')}</h5>
-                  <span className={`project-badge ${event.project.tipo}`}>
-                    {event.project.tipo}
-                  </span>
-                </div>
-                <p className="project-desc">{event.project.descricao}</p>
-                <div className="project-dates">
-                  <div className="date-item">
-                    <span>Início:</span>
-                    <strong>{new Date(event.project.data_inicio).toLocaleDateString('pt-BR')}</strong>
-                  </div>
-                  <div className="date-item">
-                    <span>Fim:</span>
-                    <strong>{new Date(event.project.data_fim).toLocaleDateString('pt-BR')}</strong>
-                  </div>
-                </div>
-                <div className="project-progress">
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill" 
-                      style={{ width: '75%' }}
-                    ></div>
-                  </div>
-                  <span className="progress-text">75%</span>
-                </div>
-                <div className="project-members">
-                  Equipe: {event.project.alunos.join(', ')}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {timeSlotEvents.length > 0 && (
-          <div className="events-section">
-            <h4>Horários Agendados</h4>
-            {timeSlotEvents.map((event, index) => (
-              <div key={index} className="time-slot-mini-card">
-                <div className="time-slot-header">
-                  <span className="hora">{event.horario.hora}</span>
-                  {event.slot.versao && (
-                    <span className="version-badge">{event.slot.versao}</span>
-                  )}
-                </div>
-                <div className="atividade">{event.horario.atividade}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {dayEvents.length === 0 && (
-          <div className="no-events">
-            <span>📅</span>
-            <p>Nenhum evento para esta data</p>
-          </div>
-        )}
       </div>
     );
-  };
+  }
+
+  return (
+    <div className="info-panel">
+      <h3>Detalhes — {selectedDate.toLocaleDateString('pt-BR')}</h3>
+
+      <div className="date-summary">
+        <div className="summary-item">
+          <span className="summary-count">{projectEvents.length}</span>
+          <span className="summary-label">Projetos</span>
+        </div>
+        <div className="summary-item">
+          <span className="summary-count">{timeSlotEvents.length}</span>
+          <span className="summary-label">Horários</span>
+        </div>
+        <div className="summary-item">
+          <span className="summary-count">{dayEvents.length}</span>
+          <span className="summary-label">Total</span>
+        </div>
+      </div>
+
+      {projectEvents.length > 0 && (
+        <div className="events-section">
+          <h4>Projetos do Dia</h4>
+
+          {projectEvents.map(event => (
+            <div key={event.project.id} className="project-card">
+              <div className="project-header">
+                <h5>{event.project.nome}</h5>
+                <span className={`project-badge ${event.project.tipo}`}>
+                  {event.project.tipo}
+                </span>
+              </div>
+
+              <p className="project-desc">{event.project.descricao}</p>
+
+              <div className="project-dates">
+                <div className="date-item">
+                  <span>Início:</span>
+                  <strong>
+                    {new Date(event.project.data_inicio).toLocaleDateString('pt-BR')}
+                  </strong>
+                </div>
+                <div className="date-item">
+                  <span>Fim:</span>
+                  <strong>
+                    {new Date(event.project.data_fim).toLocaleDateString('pt-BR')}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="project-members">
+                Equipe:{' '}
+                {Array.isArray(event.project.alunos)
+                  ? event.project.alunos.join(', ')
+                  : event.project.alunos || '—'}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {timeSlotEvents.length > 0 && (
+        <div className="events-section">
+          <h4>Horários Agendados</h4>
+
+          {timeSlotEvents.map((event, index) => (
+            <div
+              key={`${index}-${event.horario.hora}`}
+              className="time-slot-mini-card"
+            >
+              <div className="time-slot-header">
+                <span className="hora">{event.horario.hora}</span>
+              </div>
+              <div className="atividade">{event.horario.atividade}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+
+      {dayEvents.length === 0 && (
+        <div className="no-events">
+          <span>📅</span>
+          <p>Nenhum evento para esta data</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
   // Main Calendar Component
   const MainCalendar = () => {
@@ -741,7 +846,20 @@ const calendarEvents = useMemo(() => {
 
   return (
     <div className="calendar-system">
-      <CalendarHeader />
+      <CalendarHeader
+        allProjects={allProjects}
+        selectedProjectId={selectedProjectId}
+        setSelectedProjectId={setSelectedProjectId}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        currentDate={currentDate}
+        goToToday={goToToday}
+        navigateDay={navigateDay}
+        navigateWeek={navigateWeek}
+        navigateMonth={navigateMonth}
+        navigateYear={navigateYear}
+      />
+
       
       <div className="calendar-body">
         <div className="sidebar">
