@@ -1228,6 +1228,238 @@ body {
   color: #718096;
   margin-top: 5px;
 }
+/* Estilos para o painel de agenda dinâmico */
+
+.time-slots-panel .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+}
+
+.time-slots-panel .header-info {
+  display: flex;
+  align-items: center;
+}
+
+.time-slots-panel .month-year {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f56565;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.agenda-day-group {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.agenda-day-group:last-child {
+  border-bottom: none;
+}
+
+.agenda-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.day-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.day-header-left .weekday {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  text-transform: capitalize;
+}
+
+.day-header-left .date {
+  font-size: 14px;
+  color: #a0aec0;
+}
+
+.day-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.weather-info {
+  font-size: 14px;
+  color: #f56565;
+  font-weight: 600;
+}
+
+.special-section {
+  margin: 12px 0;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+  border-left: 3px solid #4299e1;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f56565;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.version-section {
+  margin: 10px 0;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(255,255,255,0.2);
+}
+
+.version-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.version-number {
+  font-size: 13px;
+  font-weight: 600;
+  color: #48bb78;
+}
+
+.version-time {
+  font-size: 12px;
+  color: #a0aec0;
+}
+
+.day-slots {
+  margin-top: 10px;
+}
+
+.time-slot-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 6px 0;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.time-slot-item .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.time-slot-item .time {
+  font-weight: 400;
+  color: #a0aec0;
+  min-width: 90px;
+  flex-shrink: 0;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.time-slot-item .activity {
+  font-weight: 500;
+  color: white;
+  flex: 1;
+}
+
+.no-slots-day {
+  text-align: center;
+  padding: 15px;
+  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+  font-style: italic;
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.project-start-summary {
+  margin-top: 20px;
+  padding: 12px;
+  background: rgba(66, 153, 225, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid #4299e1;
+}
+
+.project-start-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.project-start-icon {
+  color: #4299e1;
+  font-size: 16px;
+}
+
+.project-start-header strong {
+  color: white;
+  font-size: 14px;
+}
+
+.project-start-details {
+  padding-left: 24px;
+}
+
+.project-start-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.project-start-time {
+  font-size: 12px;
+  color: #a0aec0;
+}
+
+/* Ajustes para quando não há projeto selecionado */
+.time-slots-panel .no-slots {
+  text-align: center;
+  padding: 40px 20px;
+  color: rgba(255,255,255,0.7);
+}
+
+.time-slots-panel .no-slots span {
+  font-size: 32px;
+  margin-bottom: 10px;
+  display: block;
+  opacity: 0.5;
+}
+
+.time-slots-panel .no-slots p {
+  margin: 0;
+  font-size: 14px;
+}
+/* Estilos para quando não há projeto selecionado */
+.no-project-selected {
+  text-align: center;
+  padding: 40px 20px;
+  color: rgba(255,255,255,0.7);
+}
+
+.no-project-selected span {
+  font-size: 32px;
+  margin-bottom: 10px;
+  display: block;
+  opacity: 0.5;
+}
+
+.no-project-selected p {
+  margin: 0;
+  font-size: 14px;
+}
 
 /* Responsividade */
 @media (max-width: 1200px) {
