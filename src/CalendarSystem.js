@@ -7,92 +7,128 @@ const CalendarSystem = () => {
   const [projects, setProjects] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
   const [viewMode, setViewMode] = useState('month');
-  const [selectedProjectId, setSelectedProjectId] = useState(''); // Inicia vazio
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+
   const [allProjects, setAllProjects] = useState([]);
 
-  // Dados de exemplo otimizados
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const url = selectedProjectId && selectedProjectId !== ''
-          ? `http://localhost/Innovatech/Config/getCalendarData.php?projeto_id=${selectedProjectId}`
-          : 'http://localhost/Innovatech/Config/getCalendarData.php';
 
-        const res = await fetch(url);
-        const text = await res.text();
+const fetchCalendarData = async (projectId = null) => {
+  try {
+    let url = 'http://localhost/Innovatech/Config/getCalendarData.php';
 
-        if (text.trim().startsWith('<')) {
-          throw new Error('O PHP retornou HTML, não JSON');
-        }
+    if (projectId !== null) {
+      url += `?projeto_id=${projectId}`;
+    }
 
-        const data = JSON.parse(text);
+    const res = await fetch(url);
+    const data = await res.json();
 
-        setAllProjects(data.allProjects || []);
-        setProjects(data.projects || []);
-        setTimeSlots(data.timeSlots || []);
+    console.log('Resposta do backend:', data);
 
-      } catch (err) {
-        console.error('Erro ao buscar dados do calendário:', err);
-      }
-    };
+    setAllProjects(data.allProjects || []);
+    setProjects(data.projects || []);
+    setTimeSlots(data.timeSlots || []);
+  } catch (error) {
+    console.error('Erro ao buscar dados do calendário:', error);
+  }
+};
 
-    fetchData();
-  }, [selectedProjectId]);
+useEffect(() => {
+  fetchCalendarData(null);
+}, []);
+
+
+const getEventTitle = (event) => {
+  if (!event?.data) return 'Evento';
+
+  switch (event.type) {
+    case 'project':
+      return event.data.nome || 'Projeto';
+
+    case 'task':
+      return event.data.atividade || 'Tarefa';
+
+    case 'comment':
+      return 'Comentário';
+
+    default:
+      return 'Evento';
+  }
+};
+
 
   // Converter projetos e horários para eventos do calendário
-  const calendarEvents = useMemo(() => {
-    const events = {};
+const calendarEvents = useMemo(() => {
+  const events = {};
 
-    // 🔹 PROJETOS - Só processa se tiver projetos
-    projects.forEach(project => {
-      if (!project.data_inicio || !project.data_fim) return;
+  const addEvent = (dateKey, event) => {
+    if (!events[dateKey]) events[dateKey] = [];
+    events[dateKey].push(event);
+  };
 
-      // Adicionar evento de "Início do Projeto"
-      const startDateKey = project.data_inicio.split('T')[0];
-      if (!events[startDateKey]) events[startDateKey] = [];
-      
-      events[startDateKey].push({
+  // 🔹 PROJETOS / TAREFAS / COMENTÁRIOS
+  projects.forEach(project => {
+    if (!project) return;
+
+    // 🔹 Início do projeto
+    if (project.data_inicio) {
+      const dateKey = project.data_inicio.split('T')[0];
+      addEvent(dateKey, {
         type: 'project',
-        title: `Início: ${project.nome}`,
-        project,
-        color: '#4299e1',
-        eventType: 'start'
+        eventType: 'start',
+        title: `Início do projeto: ${project.nome}`,
+        color: '#48bb78',
+        data: project
       });
+    }
 
-      // Adicionar evento de "Conclusão do Projeto"
-      const endDateKey = project.data_fim.split('T')[0];
-      if (!events[endDateKey]) events[endDateKey] = [];
-      
-      events[endDateKey].push({
+    // 🔹 Fim do projeto
+    if (project.data_fim) {
+      const dateKey = project.data_fim.split('T')[0];
+      addEvent(dateKey, {
         type: 'project',
-        title: `Conclusão: ${project.nome}`,
-        project,
+        eventType: 'end',
+        title: `Fim do projeto: ${project.nome}`,
         color: '#f56565',
-        eventType: 'end'
+        data: project
       });
-    });
+    }
 
-    // 🔹 HORÁRIOS
-    timeSlots.forEach(slot => {
-      if (!slot.data || !slot.horarios) return;
+    // 🔹 Tarefas
+    if (Array.isArray(project.tarefas)) {
+      project.tarefas.forEach(tarefa => {
+        if (!tarefa?.data_inicio) return;
 
-      const key = slot.data; // yyyy-mm-dd
-
-      if (!events[key]) events[key] = [];
-
-      slot.horarios.forEach(horario => {
-        events[key].push({
-          type: 'time-slot',
-          title: `${horario.hora} - ${horario.atividade}`,
-          slot,
-          horario,
-          color: '#48bb78'
+        const dateKey = tarefa.data_inicio.split('T')[0];
+        addEvent(dateKey, {
+          type: 'task',
+          title: `Tarefa: ${tarefa.nome}`,
+          color: '#4299e1',
+          data: tarefa
         });
       });
-    });
+    }
 
-    return events;
-  }, [projects, timeSlots]);
+    // 🔹 Comentários
+    if (Array.isArray(project.comentarios)) {
+      project.comentarios.forEach(c => {
+        if (!c?.created_at) return;
+
+        const dateKey = c.created_at.split(' ')[0];
+        addEvent(dateKey, {
+          type: 'comment',
+          title: 'Comentário adicionado',
+          color: '#805ad5',
+          data: c
+        });
+      });
+    }
+  });
+
+  return events;
+}, [projects]);
+
+
 
   // Navigation handlers
   const navigateMonth = useCallback((increment) => {
@@ -163,13 +199,19 @@ const CalendarSystem = () => {
     };
 
     const navigate = getNavigationHandler();
+    // console.log('allProjects no render:', allProjects);
 
     return (
       <div className="calendar-header">
         <div className="project-selector">
+
           <select
-            value={selectedProjectId}
-            onChange={(e) => setSelectedProjectId(e.target.value)}
+            value={selectedProjectId ?? ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedProjectId(value ? Number(value) : null);
+            }}
+
           >
             <option value="">Selecione um projeto</option>
             {allProjects.map(p => (
@@ -304,254 +346,139 @@ const CalendarSystem = () => {
   };
 
   // Time Slots Panel (AGENDA) - CORRIGIDO
-  const TimeSlotsPanel = () => {
-    // Agrupar slots por data
-    const agendaSlots = useMemo(() => {
-      const grouped = {};
+ const TimeSlotsPanel = () => {
+  const displayDate = selectedDate || currentDate;
 
-      timeSlots.forEach(slot => {
-        if (!grouped[slot.data]) {
-          grouped[slot.data] = [];
-        }
-        grouped[slot.data].push(slot);
-      });
+  const monthYear = displayDate.toLocaleString('pt-BR', {
+    month: 'long',
+    year: 'numeric'
+  }).toUpperCase();
 
-      return Object.entries(grouped).sort(
-        ([a], [b]) => new Date(a) - new Date(b)
-      );
-    }, [timeSlots]);
+  // 🔹 Agenda unificada por dia (COM PROTEÇÃO)
+ const agendaPorDia = useMemo(() => {
+  const agenda = {};
 
-    // Cores dos pontos
-    const getDotColor = (activityType) => {
-      const colorMap = {
-        'Comunidade': '#4299e1', // Azul
-        'Tambo': '#805ad5', // Roxo
-        'Alguns': '#ed8936', // Laranja
-        'TINDESSA': '#f56565', // Vermelho
-        'default': '#48bb78' // Verde padrão
-      };
-      
-      if (activityType?.includes('Comunidade')) return colorMap['Comunidade'];
-      if (activityType?.includes('Tambo')) return colorMap['Tambo'];
-      if (activityType?.includes('Alguns')) return colorMap['Alguns'];
-      if (activityType?.includes('TINDESSA')) return colorMap['TINDESSA'];
-      return colorMap['default'];
-    };
+  if (!Array.isArray(projects)) return agenda;
 
-    // Obter data atual para exibição
-    const displayDate = selectedDate || currentDate;
-    const monthYear = displayDate.toLocaleString('pt-BR', { 
-      month: 'long', 
-      year: 'numeric' 
-    }).toUpperCase();
-
-    // Obter projeto selecionado (se houver)
-    const selectedProject = selectedProjectId && selectedProjectId !== '' && selectedProjectId !== 'all'
-      ? projects.find(p => p.id == selectedProjectId) || allProjects.find(p => p.id == selectedProjectId)
-      : null;
-
-    // Verificar se o projeto tem data de início na data selecionada
-    const projectStartDate = selectedProject?.data_inicio ? 
-      new Date(selectedProject.data_inicio) : null;
-    
-    const showProjectStart = selectedProject && 
-      projectStartDate && 
-      projectStartDate.toDateString() === displayDate.toDateString();
-
-    // Filtrar slots apenas para o projeto selecionado (se não for "all")
-    const filteredAgendaSlots = useMemo(() => {
-      if (selectedProjectId === 'all' || selectedProjectId === '') {
-        return agendaSlots;
-      }
-      
-      return agendaSlots.filter(([date, slots]) => {
-        // Aqui você pode adicionar lógica para filtrar por projeto se necessário
-        return slots.length > 0;
-      });
-    }, [agendaSlots, selectedProjectId]);
-
-    return (
-      <div className="time-slots-panel">
-        <div className="panel-header">
-          <h3>Agenda</h3>
-          <div className="header-info">
-            <span className="month-year">{monthYear}</span>
-          </div>
-        </div>
-
-        <div className="time-slots-list-agenda">
-          {/* Se nenhum projeto estiver selecionado */}
-          {!selectedProjectId || selectedProjectId === '' ? (
-            <div className="no-project-selected">
-              <span>📋</span>
-              <p>Selecione um projeto para ver a agenda</p>
-            </div>
-          ) : (
-            /* Se houver projeto selecionado ou "Todos os Projetos" */
-            <>
-              {/* Mostrar informações específicas do projeto se estiver selecionado */}
-              {selectedProject && (
-                <div className="agenda-day-group">
-                  {/* Cabeçalho do Dia */}
-                  <div className="agenda-day-header">
-                    <div className="day-header-left">
-                      <span className="weekday">
-                        {displayDate.toLocaleDateString('pt-BR', { weekday: 'long' })}:
-                      </span>
-                      <span className="date">
-                        {displayDate.toLocaleDateString('pt-BR')}
-                      </span>
-                    </div>
-                    <div className="day-header-right">
-                      <span className="weather-info">28h/30F</span>
-                    </div>
-                  </div>
-
-                  {/* Seção "Inicio Fecha" se for o dia de início do projeto */}
-                  {showProjectStart && (
-                    <div className="special-section">
-                      <div className="section-title">Inicio Fecha:</div>
-                      <div className="time-slot-item">
-                        <span className="time">
-                          {projectStartDate.toLocaleTimeString('pt-BR', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                        <span className="activity">{selectedProject.nome}:</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Versão do projeto se existir */}
-                  {selectedProject.versao && (
-                    <div className="version-section">
-                      <div className="version-header">
-                        <span className="version-number">{selectedProject.versao}</span>
-                        <span className="version-time">- 
-                          {projectStartDate?.toLocaleTimeString('pt-BR', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          }) || '00:00'}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Slots do dia */}
-                  <div className="day-slots">
-                    {filteredAgendaSlots
-                      .filter(([date]) => {
-                        const slotDate = new Date(date);
-                        return slotDate.toDateString() === displayDate.toDateString();
-                      })
-                      .map(([data, slots]) => (
-                        slots.map((slot, slotIndex) => (
-                          slot.horarios.map((horario, index) => {
-                            const activityType = horario.atividade?.split(' - ')[0] || '';
-                            
-                            return (
-                              <div key={`${data}-${slotIndex}-${index}`} className="time-slot-item">
-                                <span className="dot" style={{ backgroundColor: getDotColor(activityType) }}></span>
-                                <span className="time">{horario.hora}</span>
-                                <span className="activity">{horario.atividade || slot.tipo}</span>
-                              </div>
-                            );
-                          })
-                        ))
-                      ))
-                    }
-
-                    {/* Mensagem se não houver slots para o dia */}
-                    {filteredAgendaSlots.filter(([date]) => {
-                      const slotDate = new Date(date);
-                      return slotDate.toDateString() === displayDate.toDateString();
-                    }).length === 0 && !showProjectStart && (
-                      <div className="no-slots-day">
-                        Nenhuma atividade agendada para este dia
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Se for "Todos os Projetos", mostrar todos os slots */}
-              {selectedProjectId === 'all' && filteredAgendaSlots.length > 0 && (
-                filteredAgendaSlots.map(([data, slots]) => {
-                  const dateObj = new Date(data);
-                  const weekday = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
-                  const dayMonth = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                  const year = dateObj.getFullYear();
-                  
-                  return (
-                    <div key={data} className="agenda-day-group">
-                      <div className="agenda-day-header">
-                        <div className="day-header-left">
-                          <span className="weekday">{weekday}:</span>
-                          <span className="date">{dayMonth}/{year}</span>
-                        </div>
-                        <div className="day-header-right">
-                          <span className="weather-info">28h/30F</span>
-                        </div>
-                      </div>
-
-                      <div className="day-slots">
-                        {slots.map((slot, slotIndex) => (
-                          slot.horarios.map((horario, index) => {
-                            const activityType = horario.atividade?.split(' - ')[0] || '';
-                            
-                            return (
-                              <div key={`${data}-${slotIndex}-${index}`} className="time-slot-item">
-                                <span className="dot" style={{ backgroundColor: getDotColor(activityType) }}></span>
-                                <span className="time">{horario.hora}</span>
-                                <span className="activity">{horario.atividade || slot.tipo}</span>
-                              </div>
-                            );
-                          })
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-
-              {/* Se não houver dados */}
-              {selectedProjectId !== 'all' && !selectedProject && filteredAgendaSlots.length === 0 && (
-                <div className="no-slots">
-                  <span>📅</span>
-                  <p>Nenhuma atividade encontrada para este projeto</p>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Mostrar "Inicio do projeto" abaixo da agenda se for o dia de início */}
-        {showProjectStart && selectedProject && (
-          <div className="project-start-summary">
-            <div className="project-start-header">
-              <span className="project-start-icon">▶</span>
-              <strong>Inicio do projeto</strong>
-            </div>
-            <div className="project-start-details">
-              <div className="project-start-name">{selectedProject.nome}</div>
-              <div className="project-start-time">
-                Criado em: {projectStartDate.toLocaleString('pt-BR', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
+  const addEvent = (dateKey, event) => {
+    if (!agenda[dateKey]) agenda[dateKey] = [];
+    agenda[dateKey].push(event);
   };
 
-  // Resto do código permanece igual...
+  projects.forEach(project => {
+    if (!project) return;
+
+    // 🔹 Início do projeto
+    if (project.data_inicio) {
+      const dateKey = project.data_inicio.split(' ')[0];
+      addEvent(dateKey, {
+        type: 'project-start',
+        title: `Início do projeto: ${project.nome}`,
+        color: '#48bb78'
+      });
+    }
+
+    // 🔹 Fim do projeto
+    if (project.data_fim) {
+      const dateKey = project.data_fim.split(' ')[0];
+      addEvent(dateKey, {
+        type: 'project-end',
+        title: `Fim do projeto: ${project.nome}`,
+        color: '#f56565'
+      });
+    }
+
+    // 🔹 Tarefas
+    if (Array.isArray(project.tarefas)) {
+      project.tarefas.forEach(tarefa => {
+        if (!tarefa?.data_inicio) return;
+
+        const dateKey = tarefa.data_inicio.split(' ')[0];
+        addEvent(dateKey, {
+          type: 'task',
+          title: `Tarefa: ${tarefa.nome}`,
+          color: '#4299e1',
+          data: tarefa
+        });
+      });
+    }
+
+    // 🔹 Comentários
+    if (Array.isArray(project.comentarios)) {
+      project.comentarios.forEach(c => {
+        if (!c?.created_at) return;
+
+        const dateKey = c.created_at.split(' ')[0];
+        addEvent(dateKey, {
+          type: 'comment',
+          title: 'Comentário adicionado',
+          color: '#805ad5',
+          data: c
+        });
+      });
+    }
+  });
+
+  return agenda;
+}, [projects]);
+
+
+  const dayKey = displayDate.toISOString().split('T')[0];
+  const dayEvents = agendaPorDia[dayKey] || [];
+
+  return (
+    <div className="time-slots-panel">
+      <div className="panel-header">
+        <h3>Agenda</h3>
+        <span className="month-year">{monthYear}</span>
+      </div>
+
+      {/* Nenhum projeto selecionado */}
+      {!selectedProjectId && (
+        <div className="no-project-selected">
+          <span>📋</span>
+          <p>Selecione um projeto para ver a agenda</p>
+        </div>
+      )}
+
+      {/* Agenda do dia */}
+      {selectedProjectId && (
+        <div className="agenda-day-group">
+          <div className="agenda-day-header">
+            <span className="weekday">
+              {displayDate.toLocaleDateString('pt-BR', { weekday: 'long' })}
+            </span>
+            <span className="date">
+              {displayDate.toLocaleDateString('pt-BR')}
+            </span>
+          </div>
+
+          <div className="day-slots">
+            {dayEvents.map((event, index) => (
+              <div key={index} className="time-slot-item">
+                <span
+                  className="dot"
+                  style={{ backgroundColor: event.color }}
+                ></span>
+                <span className="activity">{event.title}</span>
+              </div>
+            ))}
+
+            {dayEvents.length === 0 && (
+              <div className="no-slots-day">
+                Nenhuma atividade neste dia
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+
+
   // Month View Component
   const MonthView = () => {
     const getDaysInMonth = useCallback((date) => {
@@ -601,11 +528,26 @@ const CalendarSystem = () => {
                 >
                   <div className="event-dot" style={{ backgroundColor: event.color }}></div>
                   <span className="event-title">
-                    {event.type === 'project'
-                      ? (event.eventType === 'start' ? 'Início: ' : 'Conclusão: ') + event.project.nome
-                      : event.horario.atividade
-                    }
+                    {event.type === 'project' && (
+                      <>
+                        {event.eventType === 'start' ? 'Início: ' : 'Conclusão: '}
+                        {event.data?.nome || 'Projeto'}
+                      </>
+                    )}
+
+                    {event.type === 'task' && (
+                      <>
+                        Tarefa: {event.data?.atividade || 'Atividade'}
+                      </>
+                    )}
+
+                    {event.type === 'comment' && (
+                      <>
+                        Comentário adicionado
+                      </>
+                    )}
                   </span>
+
                 </div>
               ))}
             </div>
