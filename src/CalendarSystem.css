@@ -1,3 +1,6 @@
+/* ============================================= */
+/* RESET & BASE STYLES                           */
+/* ============================================= */
 * {
   margin: 0;
   padding: 0;
@@ -17,7 +20,9 @@ body {
   min-height: 100vh;
 }
 
-/* ===== HEADER ===== */
+/* ============================================= */
+/* HEADER - TOP BAR                              */
+/* ============================================= */
 .calendar-header {
   display: flex;
   justify-content: space-between;
@@ -117,7 +122,9 @@ body {
   color: white;
 }
 
-/* ===== BODY LAYOUT ===== */
+/* ============================================= */
+/* MAIN LAYOUT - GRID                            */
+/* ============================================= */
 .calendar-body {
   display: grid;
   grid-template-columns: 320px 1fr 350px;
@@ -125,7 +132,9 @@ body {
   min-height: calc(100vh - 80px);
 }
 
-/* ===== SIDEBAR (Painel Esquerdo - Estilo Escuro) ===== */
+/* ============================================= */
+/* LEFT SIDEBAR - DARK THEME                     */
+/* ============================================= */
 .sidebar {
   background: #1e1e1e;
   border-right: none;
@@ -134,7 +143,9 @@ body {
   overflow-y: auto;
 }
 
-/* Mini Calendar */
+/* ============================================= */
+/* MINI CALENDAR                                 */
+/* ============================================= */
 .mini-calendar {
   background: transparent;
   border: none;
@@ -247,96 +258,183 @@ body {
   cursor: default;
 }
 
-/* Time Slots Panel - Agenda */
+/* =============================== */
+/* AGENDA (ABAIXO DO MINI CALENDAR) */
+/* =============================== */
+
 .time-slots-panel {
   background: transparent;
-  border: none;
   padding: 0;
-  margin-top: 25px;
-}
-
-.time-slots-panel h3 {
+  margin-top: 12px;
   color: white;
-  margin-bottom: 15px;
-  font-size: 16px;
-  font-weight: 600;
-  border-bottom: 1px solid rgba(255,255,255,0.3);
-  padding-bottom: 8px;
 }
 
-.time-slots-list-agenda {
+/* Lista de dias */
+.agenda-days-list {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 16px;
 }
 
+/* Grupo do dia */
 .agenda-day-group {
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.agenda-day-group:last-child {
-  border-bottom: none;
-}
-
+/* Cabeçalho do dia */
 .agenda-day-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 14px;
   font-weight: 600;
-  color: white;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
+.agenda-day-header .date {
+  font-size: 13px;
+  font-weight: 400;
+  color: #a0aec0;
+}
+
+/* Clima */
 .weather-info {
-  font-size: 14px;
+  font-size: 13px;
   color: #f56565;
-  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
+/* Evento principal */
 .agenda-main-event-title {
   background: #805ad5;
   color: white;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
-  margin-bottom: 10px;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  margin: 6px 0 8px;
 }
 
+/* Itens da agenda */
 .horario-item-image {
   display: flex;
   align-items: flex-start;
-  padding: 4px 0;
   gap: 8px;
   font-size: 13px;
-  line-height: 1.4;
+  padding: 4px 0;
 }
 
+/* Bolinha colorida */
 .horario-item-image .dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  flex-shrink: 0;
   margin-top: 5px;
-}
-
-.time-agenda {
-  font-weight: 400;
-  color: #a0aec0;
-  min-width: 90px;
   flex-shrink: 0;
 }
 
-.activity-agenda {
-  font-weight: 500;
-  color: white;
+/* Horário */
+.time-agenda {
+  min-width: 90px;
+  color: #a0aec0;
+  font-weight: 400;
 }
 
-/* ===== MAIN CONTENT ===== */
+/* Texto */
+.activity-agenda {
+  color: white;
+  font-weight: 500;
+}
+
+/* Estado vazio */
+.no-events {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  padding: 10px 0;
+}
+
+/* ===================== */
+/* POLIMENTO VISUAL      */
+/* ===================== */
+
+/* Hover suave */
+.agenda-day-group:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Melhor leitura do header */
+.agenda-day-header {
+  letter-spacing: 0.3px;
+}
+
+/* Evento principal mais elegante */
+.agenda-main-event-title {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Eventos pequenos mais respirados */
+.horario-item-image {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.horario-item-image:hover {
+  transform: translateX(3px);
+  opacity: 0.95;
+}
+
+/* Horário mais alinhado */
+.time-agenda {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Separador invisível entre dias */
+.agenda-day-group:last-child {
+  border-bottom: none;
+}
+
+/* Scroll bonito se precisar */
+.time-slots-panel {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* Cores das bolinhas */
+.dot.blue {
+  background: #4299e1;
+}
+
+.dot.purple {
+  background: #805ad5;
+}
+
+.dot.red {
+  background: #f56565;
+}
+
+.dot.green {
+  background: #48bb78;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ============================================= */
+/* MAIN CONTENT AREA                             */
+/* ============================================= */
 .main-content {
   background: white;
   padding: 20px;
@@ -347,7 +445,9 @@ body {
   height: 100%;
 }
 
-/* Month View */
+/* ============================================= */
+/* MONTH VIEW                                    */
+/* ============================================= */
 .month-view .calendar-grid {
   height: 100%;
 }
@@ -470,7 +570,9 @@ body {
   border-radius: 3px;
 }
 
-/* Week View */
+/* ============================================= */
+/* WEEK VIEW                                     */
+/* ============================================= */
 .week-view {
   display: flex;
   flex-direction: column;
@@ -548,7 +650,9 @@ body {
   white-space: nowrap;
 }
 
-/* Day View */
+/* ============================================= */
+/* DAY VIEW                                      */
+/* ============================================= */
 .day-view {
   display: flex;
   flex-direction: column;
@@ -602,7 +706,9 @@ body {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Year View */
+/* ============================================= */
+/* YEAR VIEW                                     */
+/* ============================================= */
 .year-view {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -655,7 +761,9 @@ body {
   color: white;
 }
 
-/* ===== INFO PANEL ===== */
+/* ============================================= */
+/* RIGHT INFO PANEL                              */
+/* ============================================= */
 .info-sidebar {
   background: white;
   border-left: 2px solid #e2e8f0;
@@ -863,7 +971,7 @@ body {
   font-weight: 600;
 }
 
-/* Estados vazios */
+/* Empty States */
 .no-selection, .no-events {
   text-align: center;
   padding: 40px 20px;
@@ -882,132 +990,9 @@ body {
   font-size: 14px;
 }
 
-.no-slots {
-  text-align: center;
-  padding: 20px;
-  color: rgba(255,255,255,0.7);
-}
-
-.no-slots span {
-  font-size: 24px;
-  margin-bottom: 8px;
-  display: block;
-  opacity: 0.5;
-}
-
-.no-slots p {
-  margin: 0;
-  font-size: 12px;
-}
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 1200px) {
-  .calendar-body {
-    grid-template-columns: 280px 1fr;
-  }
-  
-  .info-sidebar {
-    grid-column: 1 / -1;
-    border-left: none;
-    border-top: 2px solid #e2e8f0;
-  }
-
-  .year-view {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 992px) {
-  .year-view {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .calendar-body {
-    grid-template-columns: 1fr;
-  }
-  
-  .sidebar {
-    border-right: none;
-    border-bottom: 2px solid #e2e8f0;
-  }
-  
-  .calendar-header {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .header-center {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .calendar-days {
-    gap: 4px;
-  }
-  
-  .calendar-day {
-    min-height: 100px;
-    padding: 8px;
-  }
-  
-  .date-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .year-view {
-    grid-template-columns: 1fr;
-  }
-
-  .week-header {
-    grid-template-columns: 50px repeat(7, 1fr);
-    font-size: 12px;
-  }
-
-  .week-grid {
-    grid-template-columns: 50px repeat(7, 1fr);
-  }
-
-  .day-grid {
-    grid-template-columns: 60px 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .calendar-header {
-    padding: 10px 15px;
-  }
-
-  .header-center h2 {
-    font-size: 18px;
-    min-width: 180px;
-  }
-
-  .view-controls {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .view-btn {
-    padding: 6px 12px;
-    font-size: 11px;
-  }
-
-  .week-header {
-    grid-template-columns: 40px repeat(7, 1fr);
-    font-size: 10px;
-  }
-
-  .week-grid {
-    grid-template-columns: 40px repeat(7, 1fr);
-  }
-
-  .day-grid {
-    grid-template-columns: 50px 1fr;
-  }
-}
-/* Estilos para o seletor de projetos */
+/* ============================================= */
+/* PROJECT SELECTOR COMPONENTS                   */
+/* ============================================= */
 .project-selector-btn {
   background: #4299e1;
   color: white;
@@ -1154,7 +1139,7 @@ body {
   white-space: nowrap;
 }
 
-/* Estilos para indicadores de projeto */
+/* Project Indicators */
 .project-indicator {
   width: 8px;
   height: 8px;
@@ -1179,14 +1164,7 @@ body {
   margin-left: auto;
 }
 
-/* Estilos para a barra de filtro */
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
+/* Filter Badge */
 .filter-badge {
   background: #edf2f7;
   color: #4a5568;
@@ -1213,7 +1191,7 @@ body {
   background: #3182ce;
 }
 
-/* Estilos para contadores de eventos */
+/* Event Count Badge */
 .event-count-badge {
   background: #4299e1;
   color: white;
@@ -1228,253 +1206,113 @@ body {
   color: #718096;
   margin-top: 5px;
 }
-/* Estilos para o painel de agenda dinâmico */
 
-.time-slots-panel .panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.3);
-}
-
-.time-slots-panel .header-info {
-  display: flex;
-  align-items: center;
-}
-
-.time-slots-panel .month-year {
-  font-size: 14px;
-  font-weight: 600;
-  color: #f56565;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.agenda-day-group {
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.agenda-day-group:last-child {
-  border-bottom: none;
-}
-
-.agenda-day-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.day-header-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.day-header-left .weekday {
-  font-size: 14px;
-  font-weight: 600;
-  color: white;
-  text-transform: capitalize;
-}
-
-.day-header-left .date {
-  font-size: 14px;
-  color: #a0aec0;
-}
-
-.day-header-right {
-  display: flex;
-  align-items: center;
-}
-
-.weather-info {
-  font-size: 14px;
-  color: #f56565;
-  font-weight: 600;
-}
-
-.special-section {
-  margin: 12px 0;
-  padding: 8px 12px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 6px;
-  border-left: 3px solid #4299e1;
-}
-
-.section-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #f56565;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.version-section {
-  margin: 10px 0;
-  padding: 6px 0;
-  border-bottom: 1px dashed rgba(255,255,255,0.2);
-}
-
-.version-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.version-number {
-  font-size: 13px;
-  font-weight: 600;
-  color: #48bb78;
-}
-
-.version-time {
-  font-size: 12px;
-  color: #a0aec0;
-}
-
-.day-slots {
-  margin-top: 10px;
-}
-
-.time-slot-item {
-  display: flex;
-  align-items: flex-start;
-  padding: 6px 0;
-  gap: 10px;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.time-slot-item .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 5px;
-}
-
-.time-slot-item .time {
-  font-weight: 400;
-  color: #a0aec0;
-  min-width: 90px;
-  flex-shrink: 0;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-}
-
-.time-slot-item .activity {
-  font-weight: 500;
-  color: white;
-  flex: 1;
-}
-
-.no-slots-day {
-  text-align: center;
-  padding: 15px;
-  color: rgba(255,255,255,0.5);
-  font-size: 13px;
-  font-style: italic;
-  background: rgba(255,255,255,0.05);
-  border-radius: 6px;
-  margin-top: 10px;
-}
-
-.project-start-summary {
-  margin-top: 20px;
-  padding: 12px;
-  background: rgba(66, 153, 225, 0.1);
-  border-radius: 8px;
-  border-left: 4px solid #4299e1;
-}
-
-.project-start-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.project-start-icon {
-  color: #4299e1;
-  font-size: 16px;
-}
-
-.project-start-header strong {
-  color: white;
-  font-size: 14px;
-}
-
-.project-start-details {
-  padding-left: 24px;
-}
-
-.project-start-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: white;
-  margin-bottom: 4px;
-}
-
-.project-start-time {
-  font-size: 12px;
-  color: #a0aec0;
-}
-
-/* Ajustes para quando não há projeto selecionado */
-.time-slots-panel .no-slots {
-  text-align: center;
-  padding: 40px 20px;
-  color: rgba(255,255,255,0.7);
-}
-
-.time-slots-panel .no-slots span {
-  font-size: 32px;
-  margin-bottom: 10px;
-  display: block;
-  opacity: 0.5;
-}
-
-.time-slots-panel .no-slots p {
-  margin: 0;
-  font-size: 14px;
-}
-/* Estilos para quando não há projeto selecionado */
-.no-project-selected {
-  text-align: center;
-  padding: 40px 20px;
-  color: rgba(255,255,255,0.7);
-}
-
-.no-project-selected span {
-  font-size: 32px;
-  margin-bottom: 10px;
-  display: block;
-  opacity: 0.5;
-}
-
-.no-project-selected p {
-  margin: 0;
-  font-size: 14px;
-}
-
-/* Responsividade */
+/* ============================================= */
+/* RESPONSIVE DESIGN                             */
+/* ============================================= */
 @media (max-width: 1200px) {
-  .project-selector-dropdown {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 400px;
-    max-height: 80vh;
-    overflow: hidden;
+  .calendar-body {
+    grid-template-columns: 280px 1fr;
   }
   
-  .project-list {
-    max-height: calc(80vh - 80px);
+  .info-sidebar {
+    grid-column: 1 / -1;
+    border-left: none;
+    border-top: 2px solid #e2e8f0;
+  }
+
+  .year-view {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .year-view {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-body {
+    grid-template-columns: 1fr;
+  }
+  
+  .sidebar {
+    border-right: none;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  
+  .calendar-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .header-center {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .calendar-days {
+    gap: 4px;
+  }
+  
+  .calendar-day {
+    min-height: 100px;
+    padding: 8px;
+  }
+  
+  .date-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .year-view {
+    grid-template-columns: 1fr;
+  }
+
+  .week-header {
+    grid-template-columns: 50px repeat(7, 1fr);
+    font-size: 12px;
+  }
+
+  .week-grid {
+    grid-template-columns: 50px repeat(7, 1fr);
+  }
+
+  .day-grid {
+    grid-template-columns: 60px 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-header {
+    padding: 10px 15px;
+  }
+
+  .header-center h2 {
+    font-size: 18px;
+    min-width: 180px;
+  }
+
+  .view-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .view-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  .week-header {
+    grid-template-columns: 40px repeat(7, 1fr);
+    font-size: 10px;
+  }
+
+  .week-grid {
+    grid-template-columns: 40px repeat(7, 1fr);
+  }
+
+  .day-grid {
+    grid-template-columns: 50px 1fr;
   }
 }

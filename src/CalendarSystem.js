@@ -8,127 +8,125 @@ const CalendarSystem = () => {
   const [timeSlots, setTimeSlots] = useState([]);
   const [viewMode, setViewMode] = useState('month');
   const [selectedProjectId, setSelectedProjectId] = useState(null);
-
   const [allProjects, setAllProjects] = useState([]);
 
+  // 🔄 Função para buscar dados do calendário
+  const fetchCalendarData = async (projectId = null) => {
+    try {
+      let url = 'http://localhost/Innovatech/Config/getCalendarData.php';
+      
+      // Adiciona o parâmetro projeto_id apenas se um projeto for selecionado
+      if (projectId) {
+        url += `?projeto_id=${projectId}`;
+      } else {
+        url += '?projeto_id=all'; // Para buscar todos os projetos para o seletor
+      }
 
-const fetchCalendarData = async (projectId = null) => {
-  try {
-    let url = 'http://localhost/Innovatech/Config/getCalendarData.php';
+      const res = await fetch(url);
+      const data = await res.json();
 
-    if (projectId !== null) {
-      url += `?projeto_id=${projectId}`;
+      console.log('Resposta do backend para projeto ID:', projectId, data);
+
+      if (projectId) {
+        // Se um projeto específico foi solicitado, atualize apenas os projetos
+        setProjects(data.projects || []);
+        setTimeSlots(data.timeSlots || []);
+      } else {
+        // Se nenhum projeto específico (ou "all"), atualize a lista de projetos
+        setAllProjects(data.allProjects || []);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados do calendário:', error);
     }
-
-    const res = await fetch(url);
-    const data = await res.json();
-
-    console.log('Resposta do backend:', data);
-
-    setAllProjects(data.allProjects || []);
-    setProjects(data.projects || []);
-    setTimeSlots(data.timeSlots || []);
-  } catch (error) {
-    console.error('Erro ao buscar dados do calendário:', error);
-  }
-};
-
-useEffect(() => {
-  fetchCalendarData(null);
-}, []);
-
-
-const getEventTitle = (event) => {
-  if (!event?.data) return 'Evento';
-
-  switch (event.type) {
-    case 'project':
-      return event.data.nome || 'Projeto';
-
-    case 'task':
-      return event.data.atividade || 'Tarefa';
-
-    case 'comment':
-      return 'Comentário';
-
-    default:
-      return 'Evento';
-  }
-};
-
-
-  // Converter projetos e horários para eventos do calendário
-const calendarEvents = useMemo(() => {
-  const events = {};
-
-  const addEvent = (dateKey, event) => {
-    if (!events[dateKey]) events[dateKey] = [];
-    events[dateKey].push(event);
   };
 
-  // 🔹 PROJETOS / TAREFAS / COMENTÁRIOS
-  projects.forEach(project => {
-    if (!project) return;
+  // 🔄 Efeito para carregar a lista de projetos inicial
+  useEffect(() => {
+    fetchCalendarData(); // Carrega a lista de projetos
+  }, []);
 
-    // 🔹 Início do projeto
-    if (project.data_inicio) {
-      const dateKey = project.data_inicio.split('T')[0];
-      addEvent(dateKey, {
-        type: 'project',
-        eventType: 'start',
-        title: `Início do projeto: ${project.nome}`,
-        color: '#48bb78',
-        data: project
-      });
+  // 🔄 Efeito para buscar dados quando o projeto selecionado muda
+  useEffect(() => {
+    if (selectedProjectId) {
+      fetchCalendarData(selectedProjectId);
+    } else {
+      // Se nenhum projeto selecionado, limpa os dados
+      setProjects([]);
+      setTimeSlots([]);
     }
+  }, [selectedProjectId]);
 
-    // 🔹 Fim do projeto
-    if (project.data_fim) {
-      const dateKey = project.data_fim.split('T')[0];
-      addEvent(dateKey, {
-        type: 'project',
-        eventType: 'end',
-        title: `Fim do projeto: ${project.nome}`,
-        color: '#f56565',
-        data: project
-      });
-    }
+  // Converter projetos e horários para eventos do calendário
+  const calendarEvents = useMemo(() => {
+    const events = {};
 
-    // 🔹 Tarefas
-    if (Array.isArray(project.tarefas)) {
-      project.tarefas.forEach(tarefa => {
-        if (!tarefa?.data_inicio) return;
+    const addEvent = (dateKey, event) => {
+      if (!events[dateKey]) events[dateKey] = [];
+      events[dateKey].push(event);
+    };
 
-        const dateKey = tarefa.data_inicio.split('T')[0];
+    // 🔹 PROJETOS / TAREFAS / COMENTÁRIOS (apenas do projeto selecionado)
+    projects.forEach(project => {
+      if (!project) return;
+
+      // 🔹 Início do projeto
+      if (project.data_inicio) {
+        const dateKey = project.data_inicio.split('T')[0] || project.data_inicio.split(' ')[0];
         addEvent(dateKey, {
-          type: 'task',
-          title: `Tarefa: ${tarefa.nome}`,
-          color: '#4299e1',
-          data: tarefa
+          type: 'project',
+          eventType: 'start',
+          title: `Início do projeto: ${project.nome}`,
+          color: '#48bb78',
+          data: project
         });
-      });
-    }
+      }
 
-    // 🔹 Comentários
-    if (Array.isArray(project.comentarios)) {
-      project.comentarios.forEach(c => {
-        if (!c?.created_at) return;
-
-        const dateKey = c.created_at.split(' ')[0];
+      // 🔹 Fim do projeto
+      if (project.data_fim) {
+        const dateKey = project.data_fim.split('T')[0] || project.data_fim.split(' ')[0];
         addEvent(dateKey, {
-          type: 'comment',
-          title: 'Comentário adicionado',
-          color: '#805ad5',
-          data: c
+          type: 'project',
+          eventType: 'end',
+          title: `Fim do projeto: ${project.nome}`,
+          color: '#f56565',
+          data: project
         });
-      });
-    }
-  });
+      }
 
-  return events;
-}, [projects]);
+      // 🔹 Tarefas
+      if (Array.isArray(project.tarefas)) {
+        project.tarefas.forEach(tarefa => {
+          if (!tarefa?.data_inicio) return;
 
+          const dateKey = tarefa.data_inicio.split('T')[0] || tarefa.data_inicio.split(' ')[0];
+          addEvent(dateKey, {
+            type: 'task',
+            title: `Tarefa: ${tarefa.nome}`,
+            color: '#4299e1',
+            data: tarefa
+          });
+        });
+      }
 
+      // 🔹 Comentários
+      if (Array.isArray(project.comentarios)) {
+        project.comentarios.forEach(c => {
+          if (!c?.created_at) return;
+
+          const dateKey = c.created_at.split('T')[0] || c.created_at.split(' ')[0];
+          addEvent(dateKey, {
+            type: 'comment',
+            title: 'Comentário adicionado',
+            color: '#805ad5',
+            data: c
+          });
+        });
+      }
+    });
+
+    console.log('Eventos do calendário:', events);
+    return events;
+  }, [projects]);
 
   // Navigation handlers
   const navigateMonth = useCallback((increment) => {
@@ -199,21 +197,32 @@ const calendarEvents = useMemo(() => {
     };
 
     const navigate = getNavigationHandler();
-    // console.log('allProjects no render:', allProjects);
 
     return (
       <div className="calendar-header">
         <div className="project-selector">
-
           <select
-            value={selectedProjectId ?? ''}
+            value={selectedProjectId || ''}
             onChange={(e) => {
               const value = e.target.value;
-              setSelectedProjectId(value ? Number(value) : null);
+              if (value) {
+                setSelectedProjectId(Number(value));
+              } else {
+                setSelectedProjectId(null);
+              }
             }}
-
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              border: '1px solid #e2e8f0',
+              backgroundColor: 'white',
+              color: '#2d3748',
+              fontSize: '14px',
+              cursor: 'pointer',
+              minWidth: '200px'
+            }}
           >
-            <option value="">Selecione um projeto</option>
+            <option value="">Todos os projetos</option>
             {allProjects.map(p => (
               <option key={p.id} value={p.id}>
                 {p.nome}
@@ -292,7 +301,7 @@ const calendarEvents = useMemo(() => {
 
       for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(miniDate.getFullYear(), miniDate.getMonth(), day);
-        const dateKey = date.toISOString().split('T')[0];
+        const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         const dayEvents = calendarEvents[dateKey] || [];
         const hasEvent = dayEvents.length > 0;
         const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
@@ -345,138 +354,309 @@ const calendarEvents = useMemo(() => {
     );
   };
 
-  // Time Slots Panel (AGENDA) - CORRIGIDO
- const TimeSlotsPanel = () => {
-  const displayDate = selectedDate || currentDate;
+ 
+  // Time Slots Panel (AGENDA) - NOVA VERSÃO ESTILO IMAGEM
+const TimeSlotsPanel = () => {
+  // Organizar eventos por data
+  const eventosPorData = useMemo(() => {
+    const eventosAgrupados = {};
 
-  const monthYear = displayDate.toLocaleString('pt-BR', {
-    month: 'long',
-    year: 'numeric'
-  }).toUpperCase();
+    projects.forEach(project => {
+      if (!project) return;
 
-  // 🔹 Agenda unificada por dia (COM PROTEÇÃO)
- const agendaPorDia = useMemo(() => {
-  const agenda = {};
+      // Adicionar início do projeto
+      if (project.data_inicio) {
+        const dataInicio = project.data_inicio.split(' ')[0];
+        if (!eventosAgrupados[dataInicio]) {
+          eventosAgrupados[dataInicio] = [];
+        }
+        eventosAgrupados[dataInicio].push({
+          type: 'project-start',
+          time: new Date(project.data_inicio).toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          title: 'Início do Projeto',
+          projectName: project.nome,
+          color: '#48bb78'
+        });
+      }
 
-  if (!Array.isArray(projects)) return agenda;
+      // Adicionar fim do projeto
+      if (project.data_fim) {
+        const dataFim = project.data_fim.split(' ')[0];
+        if (!eventosAgrupados[dataFim]) {
+          eventosAgrupados[dataFim] = [];
+        }
+        eventosAgrupados[dataFim].push({
+          type: 'project-end',
+          time: new Date(project.data_fim).toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          title: 'Finalização',
+          projectName: project.nome,
+          color: '#f56565'
+        });
+      }
 
-  const addEvent = (dateKey, event) => {
-    if (!agenda[dateKey]) agenda[dateKey] = [];
-    agenda[dateKey].push(event);
+      // Adicionar tarefas
+      if (Array.isArray(project.tarefas)) {
+        project.tarefas.forEach(tarefa => {
+          if (!tarefa?.data_inicio) return;
+
+          const dataTarefa = tarefa.data_inicio.split(' ')[0];
+          if (!eventosAgrupados[dataTarefa]) {
+            eventosAgrupados[dataTarefa] = [];
+          }
+
+          // Extrair hora da tarefa
+          const horaTarefa = new Date(tarefa.data_inicio).toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+
+          eventosAgrupados[dataTarefa].push({
+            type: 'task',
+            time: horaTarefa,
+            title: tarefa.nome,
+            description: tarefa.descricao || '',
+            status: tarefa.status || 'pendente',
+            color: '#4299e1'
+          });
+        });
+      }
+
+      // Adicionar comentários
+      if (Array.isArray(project.comentarios)) {
+        project.comentarios.forEach(comentario => {
+          if (!comentario?.created_at) return;
+
+          const dataComentario = comentario.created_at.split(' ')[0];
+          if (!eventosAgrupados[dataComentario]) {
+            eventosAgrupados[dataComentario] = [];
+          }
+
+          // Extrair hora do comentário
+          const horaComentario = new Date(comentario.created_at).toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+
+          eventosAgrupados[dataComentario].push({
+            type: 'comment',
+            time: horaComentario,
+            title: 'Comentário',
+            content: comentario.comentario || '',
+            authorId: comentario.usuario_id,
+            color: '#805ad5'
+          });
+        });
+      }
+    });
+
+    // Ordenar eventos por hora dentro de cada data
+    Object.keys(eventosAgrupados).forEach(data => {
+      eventosAgrupados[data].sort((a, b) => {
+        const horaA = a.time.split(':').map(Number);
+        const horaB = b.time.split(':').map(Number);
+        
+        // Converter para minutos para comparação
+        const minutosA = horaA[0] * 60 + horaA[1];
+        const minutosB = horaB[0] * 60 + horaB[1];
+        
+        return minutosA - minutosB;
+      });
+    });
+
+    return eventosAgrupados;
+  }, [projects]);
+
+  // Converter datas para ordenação
+  const datasOrdenadas = useMemo(() => {
+    const datas = Object.keys(eventosPorData);
+    return datas.sort((a, b) => new Date(a) - new Date(b));
+  }, [eventosPorData]);
+
+  // #############################################
+  // INSIRA AS NOVAS FUNÇÕES AQUI ↓↓↓
+  // #############################################
+
+  // NOVA FUNÇÃO PARA FORMATAR HORA AM/PM
+  const formatarHoraAMPM = (horaStr) => {
+    if (!horaStr) return { hora: '--:--', periodo: '' };
+    
+    try {
+      const [hora, minuto] = horaStr.split(':').map(Number);
+      const periodo = hora >= 12 ? 'PM' : 'AM';
+      const horaFormatada = hora % 12 || 12;
+      return {
+        hora: `${horaFormatada}:${minuto.toString().padStart(2, '0')}`,
+        periodo: periodo
+      };
+    } catch (error) {
+      return { hora: horaStr, periodo: '' };
+    }
   };
 
-  projects.forEach(project => {
-    if (!project) return;
-
-    // 🔹 Início do projeto
-    if (project.data_inicio) {
-      const dateKey = project.data_inicio.split(' ')[0];
-      addEvent(dateKey, {
-        type: 'project-start',
-        title: `Início do projeto: ${project.nome}`,
-        color: '#48bb78'
-      });
+  // NOVA FUNÇÃO PARA FORMATAR DATA
+  const formatarDataCompleta = (dataString) => {
+    const data = new Date(dataString);
+    const hoje = new Date();
+    const amanha = new Date(hoje);
+    amanha.setDate(hoje.getDate() + 1);
+    
+    // Verificar se é hoje
+    if (data.toDateString() === hoje.toDateString()) {
+      return 'Hoje';
     }
-
-    // 🔹 Fim do projeto
-    if (project.data_fim) {
-      const dateKey = project.data_fim.split(' ')[0];
-      addEvent(dateKey, {
-        type: 'project-end',
-        title: `Fim do projeto: ${project.nome}`,
-        color: '#f56565'
-      });
+    // Verificar se é amanhã
+    if (data.toDateString() === amanha.toDateString()) {
+      return 'Amanhã';
     }
+    
+    const diaSemana = data.toLocaleDateString('pt-BR', { weekday: 'long' });
+    const dia = data.getDate().toString().padStart(2, '0');
+    const mes = (data.getMonth() + 1).toString().padStart(2, '0');
+    const ano = data.getFullYear();
+    
+    return {
+      diaSemana: diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1),
+      dataFormatada: `${dia}/${mes}/${ano}`
+    };
+  };
 
-    // 🔹 Tarefas
-    if (Array.isArray(project.tarefas)) {
-      project.tarefas.forEach(tarefa => {
-        if (!tarefa?.data_inicio) return;
+  // #############################################
+  // FIM DAS NOVAS FUNÇÕES ↑↑↑
+  // #############################################
 
-        const dateKey = tarefa.data_inicio.split(' ')[0];
-        addEvent(dateKey, {
-          type: 'task',
-          title: `Tarefa: ${tarefa.nome}`,
-          color: '#4299e1',
-          data: tarefa
-        });
-      });
-    }
-
-    // 🔹 Comentários
-    if (Array.isArray(project.comentarios)) {
-      project.comentarios.forEach(c => {
-        if (!c?.created_at) return;
-
-        const dateKey = c.created_at.split(' ')[0];
-        addEvent(dateKey, {
-          type: 'comment',
-          title: 'Comentário adicionado',
-          color: '#805ad5',
-          data: c
-        });
-      });
-    }
-  });
-
-  return agenda;
-}, [projects]);
-
-
-  const dayKey = displayDate.toISOString().split('T')[0];
-  const dayEvents = agendaPorDia[dayKey] || [];
-
-  return (
-    <div className="time-slots-panel">
-      <div className="panel-header">
-        <h3>Agenda</h3>
-        <span className="month-year">{monthYear}</span>
-      </div>
-
-      {/* Nenhum projeto selecionado */}
-      {!selectedProjectId && (
+  // Se não há projeto selecionado
+  if (!selectedProjectId) {
+    return (
+      <div className="time-slots-panel">
+        <div className="panel-header">
+          <h3>Agenda</h3>
+          <span className="month-year">
+            {currentDate.toLocaleString('pt-BR', { 
+              month: 'long', 
+              year: 'numeric' 
+            }).toUpperCase()}
+          </span>
+        </div>
         <div className="no-project-selected">
-          <span>📋</span>
+          <span className="icon">📋</span>
           <p>Selecione um projeto para ver a agenda</p>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {/* Agenda do dia */}
-      {selectedProjectId && (
-        <div className="agenda-day-group">
-          <div className="agenda-day-header">
-            <span className="weekday">
-              {displayDate.toLocaleDateString('pt-BR', { weekday: 'long' })}
-            </span>
-            <span className="date">
-              {displayDate.toLocaleDateString('pt-BR')}
-            </span>
-          </div>
+  // Se há projeto selecionado mas não há eventos
+  if (datasOrdenadas.length === 0) {
+    return (
+      <div className="time-slots-panel">
+        <div className="panel-header">
+          <h3>Agenda</h3>
+          <span className="month-year">
+            {currentDate.toLocaleString('pt-BR', { 
+              month: 'long', 
+              year: 'numeric' 
+            }).toUpperCase()}
+          </span>
+        </div>
+        <div className="no-events">
+          <p>Nenhuma atividade agendada para este projeto</p>
+        </div>
+      </div>
+    );
+  }
 
-          <div className="day-slots">
-            {dayEvents.map((event, index) => (
-              <div key={index} className="time-slot-item">
-                <span
-                  className="dot"
-                  style={{ backgroundColor: event.color }}
-                ></span>
-                <span className="activity">{event.title}</span>
+  return (
+  <div className="time-slots-panel">
+    <div className="panel-header">
+      <h3>Agenda</h3>
+      <span className="month-year">
+        {currentDate
+          .toLocaleString('pt-BR', {
+            month: 'long',
+            year: 'numeric',
+          })
+          .toUpperCase()}
+      </span>
+    </div>
+
+    <div className="agenda-days-list">
+      {datasOrdenadas.map((dataStr) => {
+        const dataInfo = formatarDataCompleta(dataStr);
+        const diaSemana =
+          typeof dataInfo === 'object' ? dataInfo.diaSemana : dataInfo;
+        const dataFormatada =
+          typeof dataInfo === 'object' ? dataInfo.dataFormatada : '';
+
+        const eventosDoDia = eventosPorData[dataStr] || [];
+
+        const eventosInicioProjeto = eventosDoDia.filter(
+          (e) => e.type === 'project-start'
+        );
+        const eventosTarefas = eventosDoDia.filter((e) => e.type === 'task');
+        const eventosComentarios = eventosDoDia.filter(
+          (e) => e.type === 'comment'
+        );
+        const eventosFimProjeto = eventosDoDia.filter(
+          (e) => e.type === 'project-end'
+        );
+
+        return (
+          <div key={dataStr} className="agenda-day-group">
+            {/* Cabeçalho do dia */}
+            <div className="agenda-day-header">
+              <div>
+                {diaSemana}
+                {dataFormatada && (
+                  <span className="date"> {dataFormatada}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Início do projeto (faixa roxa) */}
+            {eventosInicioProjeto.map((evento, idx) => (
+              <div key={`inicio-${idx}`} className="agenda-main-event-title">
+                Planejamento de Projeto — {evento.projectName}
               </div>
             ))}
 
-            {dayEvents.length === 0 && (
-              <div className="no-slots-day">
-                Nenhuma atividade neste dia
+            {/* Comentários */}
+            {eventosComentarios.map((evento, idx) => (
+              <div key={`comentario-${idx}`} className="horario-item-image">
+                <span className="dot blue"></span>
+                <span className="time-agenda">{evento.time}</span>
+                <span className="activity-agenda">Comentário</span>
               </div>
-            )}
+            ))}
+
+            {/* Tarefas */}
+            {eventosTarefas.map((evento, idx) => (
+              <div key={`tarefa-${idx}`} className="horario-item-image">
+                <span className="dot purple"></span>
+                <span className="time-agenda">{evento.time}</span>
+                <span className="activity-agenda">{evento.title}</span>
+              </div>
+            ))}
+
+            {/* Finalização */}
+            {eventosFimProjeto.map((evento, idx) => (
+              <div key={`fim-${idx}`} className="horario-item-image">
+                <span className="dot red"></span>
+                <span className="time-agenda">{evento.time}</span>
+                <span className="activity-agenda">Finalização do projeto</span>
+              </div>
+            ))}
           </div>
-        </div>
-      )}
+        );
+      })}
     </div>
-  );
-};
-
-
+  </div>
+);}
 
 
   // Month View Component
@@ -537,17 +717,16 @@ const calendarEvents = useMemo(() => {
 
                     {event.type === 'task' && (
                       <>
-                        Tarefa: {event.data?.atividade || 'Atividade'}
+                        Tarefa: {event.data?.nome || 'Atividade'}
                       </>
                     )}
 
                     {event.type === 'comment' && (
                       <>
-                        Comentário adicionado
+                        Comentário
                       </>
                     )}
                   </span>
-
                 </div>
               ))}
             </div>
@@ -624,8 +803,7 @@ const calendarEvents = useMemo(() => {
                 const dateKey = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
                 const dayEvents = calendarEvents[dateKey] || [];
                 const timeEvents = dayEvents.filter(event =>
-                  event.type === 'time-slot' &&
-                  event.horario.hora.split(':')[0] === time.substring(0, 2)
+                  event.type === 'task' || event.type === 'project'
                 );
 
                 return (
@@ -635,8 +813,14 @@ const calendarEvents = useMemo(() => {
                     onClick={() => { setSelectedDate(day); setCurrentDate(day); }}
                   >
                     {timeEvents.map((event, eventIndex) => (
-                      <div key={eventIndex} className="week-event">
-                        {event.horario.atividade}
+                      <div 
+                        key={eventIndex} 
+                        className="week-event"
+                        style={{ backgroundColor: event.color }}
+                      >
+                        {event.type === 'project' 
+                          ? (event.eventType === 'start' ? 'Início' : 'Fim')
+                          : 'Tarefa'}
                       </div>
                     ))}
                   </div>
@@ -688,17 +872,19 @@ const calendarEvents = useMemo(() => {
 
               <div className="day-event-slot">
                 {dayEvents
-                  .filter(
-                    event =>
-                      event.type === 'time-slot' &&
-                      event.horario.hora.split(':')[0] === time.substring(0, 2)
-                  )
+                  .filter(event => event.type === 'task' || event.type === 'project')
                   .map((event, index) => (
                     <div
-                      key={`${event.horario.hora}-${index}`}
+                      key={`${event.type}-${index}`}
                       className="day-event"
+                      style={{ backgroundColor: event.color }}
                     >
-                      <strong>{event.horario.hora}</strong> — {event.horario.atividade}
+                      <strong>
+                        {event.type === 'project' 
+                          ? (event.eventType === 'start' ? 'Início: ' : 'Fim: ')
+                          : 'Tarefa: '}
+                      </strong>
+                      {event.data?.nome || 'Evento'}
                     </div>
                   ))}
               </div>
@@ -811,7 +997,8 @@ const calendarEvents = useMemo(() => {
     }, [selectedDate, calendarEvents]);
 
     const projectEvents = dayEvents.filter(event => event.type === 'project');
-    const timeSlotEvents = dayEvents.filter(event => event.type === 'time-slot');
+    const taskEvents = dayEvents.filter(event => event.type === 'task');
+    const commentEvents = dayEvents.filter(event => event.type === 'comment');
 
     if (!selectedDate) {
       return (
@@ -825,78 +1012,85 @@ const calendarEvents = useMemo(() => {
       );
     }
 
+    // Mostra informações do projeto selecionado
+    const selectedProject = projects.length > 0 ? projects[0] : null;
+
     return (
       <div className="info-panel">
         <h3>Detalhes — {selectedDate.toLocaleDateString('pt-BR')}</h3>
 
-        <div className="date-summary">
-          <div className="summary-item">
-            <span className="summary-count">{projectEvents.length}</span>
-            <span className="summary-label">Projetos</span>
-          </div>
-          <div className="summary-item">
-            <span className="summary-count">{timeSlotEvents.length}</span>
-            <span className="summary-label">Horários</span>
-          </div>
-          <div className="summary-item">
-            <span className="summary-count">{dayEvents.length}</span>
-            <span className="summary-label">Total</span>
-          </div>
-        </div>
-
-        {projectEvents.length > 0 && (
-          <div className="events-section">
-            <h4>Eventos de Projeto</h4>
-            {projectEvents.map((event, index) => (
-              <div key={index} className="project-card">
-                <div className="project-header">
-                  <h5>{event.project.nome}</h5>
-                  <span className={`project-badge ${event.eventType}`}>
-                    {event.eventType === 'start' ? 'Início' : 'Conclusão'}
-                  </span>
-                </div>
-                <div className="project-dates">
-                  <div className="date-item">
-                    <span>Data:</span>
-                    <strong>
-                      {new Date(
-                        event.eventType === 'start'
-                          ? event.project.data_inicio
-                          : event.project.data_fim
-                      ).toLocaleDateString('pt-BR')}
-                    </strong>
-                  </div>
-                  <div className="date-item">
-                    <span>Hora:</span>
-                    <strong>
-                      {new Date(
-                        event.eventType === 'start'
-                          ? event.project.data_inicio
-                          : event.project.data_fim
-                      ).toLocaleTimeString('pt-BR', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </strong>
-                  </div>
-                </div>
+        {selectedProject && (
+          <div className="project-card" style={{ marginBottom: '20px' }}>
+            <div className="project-header">
+              <h5>{selectedProject.nome}</h5>
+              <span className={`project-badge ${selectedProject.status}`}>
+                {selectedProject.status || 'Ativo'}
+              </span>
+            </div>
+            <div className="project-desc">
+              {selectedProject.descricao || 'Sem descrição'}
+            </div>
+            <div className="project-dates">
+              <div className="date-item">
+                <span>Início:</span>
+                <strong>
+                  {selectedProject.data_inicio 
+                    ? new Date(selectedProject.data_inicio).toLocaleDateString('pt-BR')
+                    : 'Não definido'}
+                </strong>
               </div>
-            ))}
+              <div className="date-item">
+                <span>Término:</span>
+                <strong>
+                  {selectedProject.data_fim
+                    ? new Date(selectedProject.data_fim).toLocaleDateString('pt-BR')
+                    : 'Não definido'}
+                </strong>
+              </div>
+            </div>
+            <div className="project-members">
+              <strong>Alunos:</strong> {selectedProject.alunos?.join(', ') || 'Nenhum'}
+              <br />
+              <strong>Orientadores:</strong> {selectedProject.orientadores?.join(', ') || 'Nenhum'}
+            </div>
           </div>
         )}
 
-        {timeSlotEvents.length > 0 && (
+        <div className="date-summary">
+          <div className="summary-item start">
+            <span className="summary-count">{projectEvents.length}</span>
+            <span className="summary-label">Projetos</span>
+          </div>
+          <div className="summary-item ongoing">
+            <span className="summary-count">{taskEvents.length}</span>
+            <span className="summary-label">Tarefas</span>
+          </div>
+          <div className="summary-item end">
+            <span className="summary-count">{commentEvents.length}</span>
+            <span className="summary-label">Comentários</span>
+          </div>
+        </div>
+
+        {taskEvents.length > 0 && (
           <div className="events-section">
-            <h4>Horários Agendados</h4>
-            {timeSlotEvents.map((event, index) => (
-              <div
-                key={`${index}-${event.horario.hora}`}
-                className="time-slot-mini-card"
-              >
+            <h4>Tarefas</h4>
+            {taskEvents.map((event, index) => (
+              <div key={index} className="time-slot-mini-card">
                 <div className="time-slot-header">
-                  <span className="hora">{event.horario.hora}</span>
+                  <span className="hora">
+                    {event.data?.data_inicio 
+                      ? new Date(event.data.data_inicio).toLocaleTimeString('pt-BR', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })
+                      : 'Sem hora'}
+                  </span>
                 </div>
-                <div className="atividade">{event.horario.atividade}</div>
+                <div className="atividade">
+                  <strong>{event.data?.nome || 'Tarefa'}</strong>
+                  <br />
+                  <small>{event.data?.descricao || 'Sem descrição'}</small>
+                </div>
               </div>
             ))}
           </div>
