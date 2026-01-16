@@ -96,33 +96,40 @@ const CalendarSystem = () => {
       // 🔹 Tarefas
       if (Array.isArray(project.tarefas)) {
         project.tarefas.forEach(tarefa => {
-          if (!tarefa?.data_inicio) return;
+          if (!tarefa?.created_at) return;
 
-          const dateKey = tarefa.data_inicio.split('T')[0] || tarefa.data_inicio.split(' ')[0];
+          const dateKey = tarefa.created_at.split('T')[0] || tarefa.created_at.split(' ')[0];
+
           addEvent(dateKey, {
             type: 'task',
-            title: `Tarefa: ${tarefa.nome}`,
+            title: tarefa.nome, // só o título, sem "Tarefa:"
             color: '#4299e1',
-            data: tarefa
+            data: tarefa,
+            time: new Date(tarefa.created_at).toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit'
+            })
           });
         });
       }
 
+
+      
       // 🔹 Comentários
       if (Array.isArray(project.comentarios)) {
         project.comentarios.forEach(c => {
           if (!c?.created_at) return;
 
           const dateKey = c.created_at.split('T')[0] || c.created_at.split(' ')[0];
+
           addEvent(dateKey, {
             type: 'comment',
-            title: 'Comentário adicionado',
+            title: `Comentário - ${c.usuario_nome}`,
             color: '#805ad5',
             data: c
           });
         });
-      }
-    });
+      }});
 
     console.log('Eventos do calendário:', events);
     return events;
@@ -448,7 +455,7 @@ const TimeSlotsPanel = () => {
             time: horaComentario,
             title: 'Comentário',
             content: comentario.comentario || '',
-            authorId: comentario.usuario_id,
+            authorName: comentario.usuario_nome,
             color: '#805ad5'
           });
         });

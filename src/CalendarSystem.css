@@ -419,6 +419,72 @@ body {
   background: #48bb78;
 }
 
+/* =============================== */
+/* AJUSTE FINO – IGUAL À IMAGEM    */
+/* =============================== */
+
+/* Menos espaço entre dias */
+.agenda-days-list {
+  gap: 12px;
+}
+
+/* Dia mais compacto */
+.agenda-day-group {
+  padding-bottom: 10px;
+}
+
+/* Cabeçalho bem discreto */
+.agenda-day-header {
+  font-size: 13px;
+  margin-bottom: 4px;
+  opacity: 0.9;
+}
+
+.agenda-day-header .date {
+  font-size: 12px;
+}
+
+/* Evento principal mais “flat” */
+.agenda-main-event-title {
+  padding: 5px 8px;
+  font-size: 12.5px;
+  border-radius: 4px;
+  margin: 4px 0 6px;
+  box-shadow: none;
+}
+
+/* Itens MUITO próximos (agenda real) */
+.horario-item-image {
+  gap: 6px;
+  padding: 2px 0;
+  font-size: 12.5px;
+}
+
+/* Linha do tempo mais colada */
+.horario-item-image .dot {
+  margin-top: 4px;
+}
+
+/* Horário mais estreito */
+.time-agenda {
+  min-width: 72px;
+  font-size: 12px;
+}
+
+/* Texto menos pesado */
+.activity-agenda {
+  font-weight: 400;
+}
+
+/* Linha do tempo quase invisível */
+.agenda-day-group::before {
+  opacity: 0.5;
+}
+
+/* Remove qualquer sensação de card */
+.agenda-day-group:hover {
+  background: transparent;
+}
 
 
 
