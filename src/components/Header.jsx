@@ -1,9 +1,10 @@
 import './Header.css';
-import logo from '../assets/logo.png'; // ajuste o caminho
+import logo from '../assets/logo.png';
 
 export default function Header() {
   return (
     <header>
+      {/* Fontes e ícones devem ficar no index.html do React */}
       <nav>
         <ul className="menu">
 
@@ -16,53 +17,123 @@ export default function Header() {
           </li>
 
           <li>
+            <a href="http://localhost/Innovatech/Public/Home.php">Início</a>
+          </li>
+
+          <li>
             <a href="#">Projetos</a>
             <ul className="submenu">
-              <li><a href="http://localhost/Innovatech/Shared/RegisterProject.php">Cadastrar Projetos</a></li>
-              <li><a href="http://localhost/Innovatech/Shared/EditProject.php">Editar Projetos</a></li>
-              <li><a href="http://localhost/Innovatech/Shared/ViewListProject.php">Visualizar Lista de Projetos</a></li>
-              <li><a href="http://localhost/Innovatech/Shared/CompleteProject.php">Concluir Projeto</a></li>
+              <li>
+                <a href="http://localhost/Innovatech/Shared/RegisterProject.php">
+                  Cadastrar Projetos
+                </a>
+              </li>
+              <li>
+                <a href="http://localhost/Innovatech/Shared/ViewListProject.php">
+                  Visualizar Lista de Projetos
+                </a>
+              </li>
             </ul>
           </li>
 
           <li>
             <a href="#">Tarefas</a>
             <ul className="submenu">
-              <li><a href="http://localhost/Innovatech/Shared/AddTasks.php">Adicionar Tarefas</a></li>
-              <li><a href="http://localhost/Innovatech/Shared/EditTasks.php">Editar Tarefas</a></li>
-              <li><a href="http://localhost/Innovatech/Shared/ViewListTasks.php">Visualizar Lista de Tarefas</a></li>
-              <li><a href="http://localhost/Innovatech/Shared/CompleteTasks.php">Concluir Tarefas</a></li>
+              <li>
+                <a href="http://localhost/Innovatech/Shared/AddTasks.php">
+                  Adicionar Tarefas
+                </a>
+              </li>
+              <li>
+                <a href="http://localhost/Innovatech/Shared/ViewListTasks.php">
+                  Visualizar Lista de Tarefas
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <a href="#">Colaboração</a>
+            <ul className="submenu">
+              <li>
+                <a href="http://localhost/Innovatech/Shared/Comments.php">
+                  Comentários
+                </a>
+              </li>
+              <li>
+                <a href="http://localhost/Innovatech/Shared/ViewComments.php">
+                  Visualizar Comentários
+                </a>
+              </li>
+              <li>
+                <a href="http://localhost/Innovatech/Shared/SendReport.php">
+                  Relatório de Progresso
+                </a>
+              </li>
+              <li>
+                <a href="http://localhost/Innovatech/Shared/MyReports.php">
+                  Meus Relatórios
+                </a>
+              </li>
+              <li>
+                <a href="http://localhost/Innovatech/Shared/ViewReportsTeacher.php">
+                  Relatórios Recebidos
+                </a>
+              </li>
             </ul>
           </li>
 
           <li>
             <a href="#">Calendário</a>
             <ul className="submenu">
-              <li><a href="http://localhost:3000">Visualizar Calendário</a></li>
+              <li>
+                <a href="http://localhost:3000">
+                  Visualizar Calendário
+                </a>
+              </li>
             </ul>
           </li>
 
           <li>
-            <a href="#">Relatórios</a>
+            <a href="#">Gerenciamento</a>
             <ul className="submenu">
-              <li><a href="http://localhost/Innovatech/Shared/ProgressReport.php">Relatório de Progresso</a></li>
-              <li><a href="http://localhost/Innovatech/Shared/PerformanceReport.php">Relatório de Desempenho</a></li>
+              <li>
+                <a href="http://localhost/Innovatech/Shared/UserManagerAdmin.php">
+                  Gerenciar Usuários
+                </a>
+              </li>
+              <li>
+                <a href="http://localhost/Innovatech/Shared/UserManagerCoord.php">
+                  Gerenciar Alunos e Professores
+                </a>
+              </li>
             </ul>
           </li>
 
           <li>
-            <a href="#">Configurações</a>
+            <a href="#">Suporte</a>
             <ul className="submenu">
-              <li><a href="http://localhost/Innovatech/Shared/SystemSettings.php">Configurações do Sistema</a></li>
-              <li><a href="http://localhost/Innovatech/Users/Admin/ValidateUser.php">Gerenciar Usuários</a></li>
+              <li>
+                <a href="http://localhost/Innovatech/Shared/Support.php">
+                  Solicitar Suporte
+                </a>
+              </li>
+              <li>
+                <a href="http://localhost/Innovatech/Shared/SuportAdmin.php">
+                  Painel de Solicitações
+                </a>
+              </li>
             </ul>
           </li>
 
-          <li><a href="http://localhost/Innovatech/Shared/Support.php">Suporte</a></li>
-          <li><a href="http://localhost/Innovatech/Logout.php">Sair</a></li>
+          <li>
+            <a href="http://localhost/Innovatech/Public/Logout.php">
+              Sair
+            </a>
+          </li>
 
           <li className="bell-icon">
-            <a href="#">
+            <a href="javascript:void(0)">
               <i className="fa-regular fa-bell"></i>
               <span className="notification-bubble"></span>
             </a>
