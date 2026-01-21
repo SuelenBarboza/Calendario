@@ -396,3 +396,116 @@ header {
     margin-right: 8px;
     color: #00D4FF;
 }
+
+/* ===== PERFIL DO USUÁRIO - REORGANIZADO ===== */
+/* POSICIONAMENTO À DIREITA */
+.user-profile {
+    margin-left: auto !important; /* ISSO coloca à direita */
+    order: 1000;
+    position: relative;
+}
+
+/* IMAGEM CIRCULAR - ESTILO ÚNICO E CORRETO */
+.user-profile .user-avatar {
+    width: 45px !important;
+    height: 45px !important;
+    border-radius: 50% !important;
+    -webkit-border-radius: 50% !important;
+    -moz-border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 2px solid #00D4FF !important;
+    display: block !important;
+}
+
+/* Efeito hover */
+.user-profile > a:hover .user-avatar {
+    border-color: #ffffff !important;
+    transform: scale(1.05) !important;
+}
+
+/* Container do perfil */
+.user-profile > a {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 8px 12px !important;
+    background: transparent !important;
+    text-decoration: none !important;
+    color: white !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Informações do usuário */
+.user-info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.user-name {
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.user-role {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    font-weight: 400;
+}
+
+/* Submenu do perfil à direita */
+.user-profile .submenu {
+    right: 0 !important;
+    left: auto !important;
+    min-width: 200px;
+    margin-top: 5px;
+}
+
+/* ===== CORREÇÃO DO HOVER DO SUBMENU ===== */
+.user-profile::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    background: transparent;
+    z-index: 1001;
+}
+
+.user-profile:hover .submenu,
+.user-profile .submenu:hover {
+    display: block !important;
+}
+
+/* ===== RESPONSIVIDADE DO PERFIL ===== */
+@media (max-width: 1024px) {
+    .user-profile .user-avatar {
+        width: 40px !important;
+        height: 40px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .user-profile {
+        margin-left: 0 !important;
+        width: 100%;
+        order: 1;
+        justify-content: center !important;
+    }
+    
+    .user-profile > a {
+        justify-content: center !important;
+        background-color: rgba(0, 212, 255, 0.1) !important;
+        border-radius: 30px !important;
+    }
+    
+    .user-profile .submenu {
+        right: auto !important;
+        left: 50% !important;
+        transform: translateX(-50%);
+        width: 90%;
+    }
+}
