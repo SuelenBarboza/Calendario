@@ -1,3 +1,4 @@
+import React from 'react';
 import './Header.css';
 import logo from '../assets/logo.png';
 import { useUsuario } from '../context/UsuarioContext';
@@ -7,7 +8,7 @@ export default function Header() {
 
   if (!usuario) return null; // ainda não carregou
 
-  const { nome, tipo, foto } = usuario;
+  const { nome = 'Usuário', tipo = '', foto = '../Assets/img/avatar.png' } = usuario;
 
   // Ajusta caminho da foto caso venha relativo do PHP
   const avatarUrl = foto.startsWith('http')
