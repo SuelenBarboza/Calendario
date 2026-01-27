@@ -38,6 +38,7 @@ export default function Header() {
             <ul className="submenu">
               <li><a href="http://localhost/Innovatech/Shared/RegisterProject.php">Cadastrar Projetos</a></li>
               <li><a href="http://localhost/Innovatech/Shared/ViewListProject.php">Visualizar Lista de Projetos</a></li>
+              {tipo === 'Admin' && <li><a href="http://localhost/Innovatech/Shared/AdminViewAllProjects.php">Todos os Projetos</a></li>}
             </ul>
           </li>
 
