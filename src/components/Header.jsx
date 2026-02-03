@@ -48,6 +48,7 @@ export default function Header() {
             <ul className="submenu">
               <li><a href="http://localhost/Innovatech/Shared/AddTasks.php">Adicionar Tarefas</a></li>
               <li><a href="http://localhost/Innovatech/Shared/ViewListTasks.php">Visualizar Lista de Tarefas</a></li>
+              {tipo === 'Admin' && <li><a href="http://localhost/Innovatech/Shared/AdminViewAllTasks.php">Todas as Tarefas</a></li>}
             </ul>
           </li>
 
