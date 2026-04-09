@@ -14,45 +14,50 @@ const CalendarSystem = () => {
   const fetchCalendarData = async (projectId = null) => {
     try {
       let url = 'http://localhost/Innovatech/Config/getCalendarData.php';
-      
-      // Adiciona o parâmetro projeto_id apenas se um projeto for selecionado
+
       if (projectId) {
         url += `?projeto_id=${projectId}`;
       } else {
-        url += '?projeto_id=all'; // Para buscar todos os projetos para o seletor
+        url += '?projeto_id=all';
       }
 
-      const res = await fetch(url);
+      const res = await fetch(url, { credentials: 'include' });
+
+      if (res.status === 401) {
+        console.warn('Sessão expirada ou usuário não autenticado.');
+        setProjects([]);
+        setAllProjects([]);
+        return;
+      }
+
       const data = await res.json();
 
-      console.log('Resposta do backend para projeto ID:', projectId, data);
-
-      if (projectId) {
-        // Se um projeto específico foi solicitado, atualize apenas os projetos
-        setProjects(data.projects || []);
-        setTimeSlots(data.timeSlots || []);
-      } else {
-        // Se nenhum projeto específico (ou "all"), atualize a lista de projetos
-        setAllProjects(data.allProjects || []);
+      // Atualiza a lista do select
+      if (data.allProjects) {
+        setAllProjects(data.allProjects);
       }
+
+      // Atualiza os projetos exibidos no calendário
+      setProjects(data.projects || []);
+      setTimeSlots(data.timeSlots || []);
+
     } catch (error) {
       console.error('Erro ao buscar dados do calendário:', error);
     }
   };
 
-  // 🔄 Efeito para carregar a lista de projetos inicial
+  // 🔄 Carrega todos os projetos do usuário na inicialização
   useEffect(() => {
-    fetchCalendarData(); // Carrega a lista de projetos
+    fetchCalendarData();
   }, []);
 
-  // 🔄 Efeito para buscar dados quando o projeto selecionado muda
+  // 🔄 Recarrega quando o projeto selecionado muda
   useEffect(() => {
     if (selectedProjectId) {
       fetchCalendarData(selectedProjectId);
     } else {
-      // Se nenhum projeto selecionado, limpa os dados
-      setProjects([]);
-      setTimeSlots([]);
+      // Sem filtro: exibe todos os projetos do usuário
+      fetchCalendarData();
     }
   }, [selectedProjectId]);
 
@@ -65,7 +70,6 @@ const CalendarSystem = () => {
       events[dateKey].push(event);
     };
 
-    // 🔹 PROJETOS / TAREFAS / COMENTÁRIOS (apenas do projeto selecionado)
     projects.forEach(project => {
       if (!project) return;
 
@@ -102,7 +106,7 @@ const CalendarSystem = () => {
 
           addEvent(dateKey, {
             type: 'task',
-            title: tarefa.nome, // só o título, sem "Tarefa:"
+            title: tarefa.nome,
             color: '#4299e1',
             data: tarefa,
             time: new Date(tarefa.created_at).toLocaleTimeString('pt-BR', {
@@ -113,8 +117,6 @@ const CalendarSystem = () => {
         });
       }
 
-
-      
       // 🔹 Comentários
       if (Array.isArray(project.comentarios)) {
         project.comentarios.forEach(c => {
@@ -129,7 +131,8 @@ const CalendarSystem = () => {
             data: c
           });
         });
-      }});
+      }
+    });
 
     console.log('Eventos do calendário:', events);
     return events;
@@ -361,310 +364,230 @@ const CalendarSystem = () => {
     );
   };
 
- 
-  // Time Slots Panel (AGENDA) - NOVA VERSÃO ESTILO IMAGEM
-const TimeSlotsPanel = () => {
-  // Organizar eventos por data
-  const eventosPorData = useMemo(() => {
-    const eventosAgrupados = {};
+  // Time Slots Panel (AGENDA)
+  const TimeSlotsPanel = () => {
+    const eventosPorData = useMemo(() => {
+      const eventosAgrupados = {};
 
-    projects.forEach(project => {
-      if (!project) return;
+      projects.forEach(project => {
+        if (!project) return;
 
-      // Adicionar início do projeto
-      if (project.data_inicio) {
-        const dataInicio = project.data_inicio.split(' ')[0];
-        if (!eventosAgrupados[dataInicio]) {
-          eventosAgrupados[dataInicio] = [];
+        if (project.data_inicio) {
+          const dataInicio = project.data_inicio.split(' ')[0];
+          if (!eventosAgrupados[dataInicio]) eventosAgrupados[dataInicio] = [];
+          eventosAgrupados[dataInicio].push({
+            type: 'project-start',
+            time: new Date(project.data_inicio).toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit'
+            }),
+            title: 'Início do Projeto',
+            projectName: project.nome,
+            color: '#48bb78'
+          });
         }
-        eventosAgrupados[dataInicio].push({
-          type: 'project-start',
-          time: new Date(project.data_inicio).toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }),
-          title: 'Início do Projeto',
-          projectName: project.nome,
-          color: '#48bb78'
-        });
-      }
 
-      // Adicionar fim do projeto
-      if (project.data_fim) {
-        const dataFim = project.data_fim.split(' ')[0];
-        if (!eventosAgrupados[dataFim]) {
-          eventosAgrupados[dataFim] = [];
+        if (project.data_fim) {
+          const dataFim = project.data_fim.split(' ')[0];
+          if (!eventosAgrupados[dataFim]) eventosAgrupados[dataFim] = [];
+          eventosAgrupados[dataFim].push({
+            type: 'project-end',
+            time: new Date(project.data_fim).toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit'
+            }),
+            title: 'Finalização',
+            projectName: project.nome,
+            color: '#f56565'
+          });
         }
-        eventosAgrupados[dataFim].push({
-          type: 'project-end',
-          time: new Date(project.data_fim).toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }),
-          title: 'Finalização',
-          projectName: project.nome,
-          color: '#f56565'
-        });
-      }
 
-      // Adicionar tarefas
-      if (Array.isArray(project.tarefas)) {
-        project.tarefas.forEach(tarefa => {
-          if (!tarefa?.data_inicio) return;
+        if (Array.isArray(project.tarefas)) {
+          project.tarefas.forEach(tarefa => {
+            if (!tarefa?.data_inicio) return;
 
-          const dataTarefa = tarefa.data_inicio.split(' ')[0];
-          if (!eventosAgrupados[dataTarefa]) {
-            eventosAgrupados[dataTarefa] = [];
-          }
+            const dataTarefa = tarefa.data_inicio.split(' ')[0];
+            if (!eventosAgrupados[dataTarefa]) eventosAgrupados[dataTarefa] = [];
 
-          // Extrair hora da tarefa
-          const horaTarefa = new Date(tarefa.data_inicio).toLocaleTimeString('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit'
+            eventosAgrupados[dataTarefa].push({
+              type: 'task',
+              time: new Date(tarefa.data_inicio).toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit'
+              }),
+              title: tarefa.nome,
+              description: tarefa.descricao || '',
+              status: tarefa.status || 'pendente',
+              color: '#4299e1'
+            });
           });
+        }
 
-          eventosAgrupados[dataTarefa].push({
-            type: 'task',
-            time: horaTarefa,
-            title: tarefa.nome,
-            description: tarefa.descricao || '',
-            status: tarefa.status || 'pendente',
-            color: '#4299e1'
+        if (Array.isArray(project.comentarios)) {
+          project.comentarios.forEach(comentario => {
+            if (!comentario?.created_at) return;
+
+            const dataComentario = comentario.created_at.split(' ')[0];
+            if (!eventosAgrupados[dataComentario]) eventosAgrupados[dataComentario] = [];
+
+            eventosAgrupados[dataComentario].push({
+              type: 'comment',
+              time: new Date(comentario.created_at).toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit'
+              }),
+              title: 'Comentário',
+              content: comentario.comentario || '',
+              authorName: comentario.usuario_nome,
+              color: '#805ad5'
+            });
           });
-        });
-      }
-
-      // Adicionar comentários
-      if (Array.isArray(project.comentarios)) {
-        project.comentarios.forEach(comentario => {
-          if (!comentario?.created_at) return;
-
-          const dataComentario = comentario.created_at.split(' ')[0];
-          if (!eventosAgrupados[dataComentario]) {
-            eventosAgrupados[dataComentario] = [];
-          }
-
-          // Extrair hora do comentário
-          const horaComentario = new Date(comentario.created_at).toLocaleTimeString('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-
-          eventosAgrupados[dataComentario].push({
-            type: 'comment',
-            time: horaComentario,
-            title: 'Comentário',
-            content: comentario.comentario || '',
-            authorName: comentario.usuario_nome,
-            color: '#805ad5'
-          });
-        });
-      }
-    });
-
-    // Ordenar eventos por hora dentro de cada data
-    Object.keys(eventosAgrupados).forEach(data => {
-      eventosAgrupados[data].sort((a, b) => {
-        const horaA = a.time.split(':').map(Number);
-        const horaB = b.time.split(':').map(Number);
-        
-        // Converter para minutos para comparação
-        const minutosA = horaA[0] * 60 + horaA[1];
-        const minutosB = horaB[0] * 60 + horaB[1];
-        
-        return minutosA - minutosB;
+        }
       });
-    });
 
-    return eventosAgrupados;
-  }, [projects]);
+      Object.keys(eventosAgrupados).forEach(data => {
+        eventosAgrupados[data].sort((a, b) => {
+          const [hA, mA] = a.time.split(':').map(Number);
+          const [hB, mB] = b.time.split(':').map(Number);
+          return (hA * 60 + mA) - (hB * 60 + mB);
+        });
+      });
 
-  // Converter datas para ordenação
-  const datasOrdenadas = useMemo(() => {
-    const datas = Object.keys(eventosPorData);
-    return datas.sort((a, b) => new Date(a) - new Date(b));
-  }, [eventosPorData]);
+      return eventosAgrupados;
+    }, [projects]);
 
-  // #############################################
-  // INSIRA AS NOVAS FUNÇÕES AQUI ↓↓↓
-  // #############################################
+    const datasOrdenadas = useMemo(() => {
+      return Object.keys(eventosPorData).sort((a, b) => new Date(a) - new Date(b));
+    }, [eventosPorData]);
 
-  // NOVA FUNÇÃO PARA FORMATAR HORA AM/PM
-  const formatarHoraAMPM = (horaStr) => {
-    if (!horaStr) return { hora: '--:--', periodo: '' };
-    
-    try {
-      const [hora, minuto] = horaStr.split(':').map(Number);
-      const periodo = hora >= 12 ? 'PM' : 'AM';
-      const horaFormatada = hora % 12 || 12;
-      return {
-        hora: `${horaFormatada}:${minuto.toString().padStart(2, '0')}`,
-        periodo: periodo
-      };
-    } catch (error) {
-      return { hora: horaStr, periodo: '' };
-    }
-  };
-
-  // NOVA FUNÇÃO PARA FORMATAR DATA
-  const formatarDataCompleta = (dataString) => {
-    const data = new Date(dataString);
-    const hoje = new Date();
-    const amanha = new Date(hoje);
-    amanha.setDate(hoje.getDate() + 1);
-    
-    // Verificar se é hoje
-    if (data.toDateString() === hoje.toDateString()) {
-      return 'Hoje';
-    }
-    // Verificar se é amanhã
-    if (data.toDateString() === amanha.toDateString()) {
-      return 'Amanhã';
-    }
-    
-    const diaSemana = data.toLocaleDateString('pt-BR', { weekday: 'long' });
-    const dia = data.getDate().toString().padStart(2, '0');
-    const mes = (data.getMonth() + 1).toString().padStart(2, '0');
-    const ano = data.getFullYear();
-    
-    return {
-      diaSemana: diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1),
-      dataFormatada: `${dia}/${mes}/${ano}`
+    const formatarHoraAMPM = (horaStr) => {
+      if (!horaStr) return { hora: '--:--', periodo: '' };
+      try {
+        const [hora, minuto] = horaStr.split(':').map(Number);
+        const periodo = hora >= 12 ? 'PM' : 'AM';
+        const horaFormatada = hora % 12 || 12;
+        return {
+          hora: `${horaFormatada}:${minuto.toString().padStart(2, '0')}`,
+          periodo: periodo
+        };
+      } catch (error) {
+        return { hora: horaStr, periodo: '' };
+      }
     };
-  };
 
-  // #############################################
-  // FIM DAS NOVAS FUNÇÕES ↑↑↑
-  // #############################################
+    const formatarDataCompleta = (dataString) => {
+      const data = new Date(dataString);
+      const hoje = new Date();
+      const amanha = new Date(hoje);
+      amanha.setDate(hoje.getDate() + 1);
 
-  // Se não há projeto selecionado
-  if (!selectedProjectId) {
-    return (
-      <div className="time-slots-panel">
-        <div className="panel-header">
-          <h3>Agenda</h3>
-          <span className="month-year">
-            {currentDate.toLocaleString('pt-BR', { 
-              month: 'long', 
-              year: 'numeric' 
-            }).toUpperCase()}
-          </span>
-        </div>
-        <div className="no-project-selected">
-          <span className="icon">📋</span>
-          <p>Selecione um projeto para ver a agenda</p>
-        </div>
-      </div>
-    );
-  }
+      if (data.toDateString() === hoje.toDateString()) return 'Hoje';
+      if (data.toDateString() === amanha.toDateString()) return 'Amanhã';
 
-  // Se há projeto selecionado mas não há eventos
-  if (datasOrdenadas.length === 0) {
-    return (
-      <div className="time-slots-panel">
-        <div className="panel-header">
-          <h3>Agenda</h3>
-          <span className="month-year">
-            {currentDate.toLocaleString('pt-BR', { 
-              month: 'long', 
-              year: 'numeric' 
-            }).toUpperCase()}
-          </span>
-        </div>
-        <div className="no-events">
-          <p>Nenhuma atividade agendada para este projeto</p>
-        </div>
-      </div>
-    );
-  }
+      const diaSemana = data.toLocaleDateString('pt-BR', { weekday: 'long' });
+      const dia = data.getDate().toString().padStart(2, '0');
+      const mes = (data.getMonth() + 1).toString().padStart(2, '0');
+      const ano = data.getFullYear();
 
-  return (
-  <div className="time-slots-panel">
-    <div className="panel-header">
-      <h3>Agenda</h3>
-      <span className="month-year">
-        {currentDate
-          .toLocaleString('pt-BR', {
-            month: 'long',
-            year: 'numeric',
-          })
-          .toUpperCase()}
-      </span>
-    </div>
+      return {
+        diaSemana: diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1),
+        dataFormatada: `${dia}/${mes}/${ano}`
+      };
+    };
 
-    <div className="agenda-days-list">
-      {datasOrdenadas.map((dataStr) => {
-        const dataInfo = formatarDataCompleta(dataStr);
-        const diaSemana =
-          typeof dataInfo === 'object' ? dataInfo.diaSemana : dataInfo;
-        const dataFormatada =
-          typeof dataInfo === 'object' ? dataInfo.dataFormatada : '';
-
-        const eventosDoDia = eventosPorData[dataStr] || [];
-
-        const eventosInicioProjeto = eventosDoDia.filter(
-          (e) => e.type === 'project-start'
-        );
-        const eventosTarefas = eventosDoDia.filter((e) => e.type === 'task');
-        const eventosComentarios = eventosDoDia.filter(
-          (e) => e.type === 'comment'
-        );
-        const eventosFimProjeto = eventosDoDia.filter(
-          (e) => e.type === 'project-end'
-        );
-
-        return (
-          <div key={dataStr} className="agenda-day-group">
-            {/* Cabeçalho do dia */}
-            <div className="agenda-day-header">
-              <div>
-                {diaSemana}
-                {dataFormatada && (
-                  <span className="date"> {dataFormatada}</span>
-                )}
-              </div>
-            </div>
-
-            {/* Início do projeto (faixa roxa) */}
-            {eventosInicioProjeto.map((evento, idx) => (
-              <div key={`inicio-${idx}`} className="agenda-main-event-title">
-                Planejamento de Projeto — {evento.projectName}
-              </div>
-            ))}
-
-            {/* Comentários */}
-            {eventosComentarios.map((evento, idx) => (
-              <div key={`comentario-${idx}`} className="horario-item-image">
-                <span className="dot blue"></span>
-                <span className="time-agenda">{evento.time}</span>
-                <span className="activity-agenda">Comentário</span>
-              </div>
-            ))}
-
-            {/* Tarefas */}
-            {eventosTarefas.map((evento, idx) => (
-              <div key={`tarefa-${idx}`} className="horario-item-image">
-                <span className="dot purple"></span>
-                <span className="time-agenda">{evento.time}</span>
-                <span className="activity-agenda">{evento.title}</span>
-              </div>
-            ))}
-
-            {/* Finalização */}
-            {eventosFimProjeto.map((evento, idx) => (
-              <div key={`fim-${idx}`} className="horario-item-image">
-                <span className="dot red"></span>
-                <span className="time-agenda">{evento.time}</span>
-                <span className="activity-agenda">Finalização do projeto</span>
-              </div>
-            ))}
+    if (datasOrdenadas.length === 0) {
+      return (
+        <div className="time-slots-panel">
+          <div className="panel-header">
+            <h3>Agenda</h3>
+            <span className="month-year">
+              {currentDate.toLocaleString('pt-BR', {
+                month: 'long',
+                year: 'numeric'
+              }).toUpperCase()}
+            </span>
           </div>
-        );
-      })}
-    </div>
-  </div>
-);}
+          <div className="no-events">
+            <span className="icon">📋</span>
+            <p>Nenhuma atividade agendada</p>
+          </div>
+        </div>
+      );
+    }
 
+    return (
+      <div className="time-slots-panel">
+        <div className="panel-header">
+          <h3>Agenda</h3>
+          <span className="month-year">
+            {currentDate
+              .toLocaleString('pt-BR', {
+                month: 'long',
+                year: 'numeric',
+              })
+              .toUpperCase()}
+          </span>
+        </div>
+
+        <div className="agenda-days-list">
+          {datasOrdenadas.map((dataStr) => {
+            const dataInfo = formatarDataCompleta(dataStr);
+            const diaSemana = typeof dataInfo === 'object' ? dataInfo.diaSemana : dataInfo;
+            const dataFormatada = typeof dataInfo === 'object' ? dataInfo.dataFormatada : '';
+
+            const eventosDoDia = eventosPorData[dataStr] || [];
+            const eventosInicioProjeto = eventosDoDia.filter(e => e.type === 'project-start');
+            const eventosTarefas = eventosDoDia.filter(e => e.type === 'task');
+            const eventosComentarios = eventosDoDia.filter(e => e.type === 'comment');
+            const eventosFimProjeto = eventosDoDia.filter(e => e.type === 'project-end');
+
+            return (
+              <div key={dataStr} className="agenda-day-group">
+                <div className="agenda-day-header">
+                  <div>
+                    {diaSemana}
+                    {dataFormatada && (
+                      <span className="date"> {dataFormatada}</span>
+                    )}
+                  </div>
+                </div>
+
+                {eventosInicioProjeto.map((evento, idx) => (
+                  <div key={`inicio-${idx}`} className="agenda-main-event-title">
+                    Planejamento de Projeto — {evento.projectName}
+                  </div>
+                ))}
+
+                {eventosComentarios.map((evento, idx) => (
+                  <div key={`comentario-${idx}`} className="horario-item-image">
+                    <span className="dot blue"></span>
+                    <span className="time-agenda">{evento.time}</span>
+                    <span className="activity-agenda">Comentário</span>
+                  </div>
+                ))}
+
+                {eventosTarefas.map((evento, idx) => (
+                  <div key={`tarefa-${idx}`} className="horario-item-image">
+                    <span className="dot purple"></span>
+                    <span className="time-agenda">{evento.time}</span>
+                    <span className="activity-agenda">{evento.title}</span>
+                  </div>
+                ))}
+
+                {eventosFimProjeto.map((evento, idx) => (
+                  <div key={`fim-${idx}`} className="horario-item-image">
+                    <span className="dot red"></span>
+                    <span className="time-agenda">{evento.time}</span>
+                    <span className="activity-agenda">Finalização do projeto</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   // Month View Component
   const MonthView = () => {
@@ -721,17 +644,11 @@ const TimeSlotsPanel = () => {
                         {event.data?.nome || 'Projeto'}
                       </>
                     )}
-
                     {event.type === 'task' && (
-                      <>
-                        Tarefa: {event.data?.nome || 'Atividade'}
-                      </>
+                      <>Tarefa: {event.data?.nome || 'Atividade'}</>
                     )}
-
                     {event.type === 'comment' && (
-                      <>
-                        Comentário
-                      </>
+                      <>Comentário</>
                     )}
                   </span>
                 </div>
@@ -820,12 +737,12 @@ const TimeSlotsPanel = () => {
                     onClick={() => { setSelectedDate(day); setCurrentDate(day); }}
                   >
                     {timeEvents.map((event, eventIndex) => (
-                      <div 
-                        key={eventIndex} 
+                      <div
+                        key={eventIndex}
                         className="week-event"
                         style={{ backgroundColor: event.color }}
                       >
-                        {event.type === 'project' 
+                        {event.type === 'project'
                           ? (event.eventType === 'start' ? 'Início' : 'Fim')
                           : 'Tarefa'}
                       </div>
@@ -887,7 +804,7 @@ const TimeSlotsPanel = () => {
                       style={{ backgroundColor: event.color }}
                     >
                       <strong>
-                        {event.type === 'project' 
+                        {event.type === 'project'
                           ? (event.eventType === 'start' ? 'Início: ' : 'Fim: ')
                           : 'Tarefa: '}
                       </strong>
@@ -1019,7 +936,6 @@ const TimeSlotsPanel = () => {
       );
     }
 
-    // Mostra informações do projeto selecionado
     const selectedProject = projects.length > 0 ? projects[0] : null;
 
     return (
@@ -1041,7 +957,7 @@ const TimeSlotsPanel = () => {
               <div className="date-item">
                 <span>Início:</span>
                 <strong>
-                  {selectedProject.data_inicio 
+                  {selectedProject.data_inicio
                     ? new Date(selectedProject.data_inicio).toLocaleDateString('pt-BR')
                     : 'Não definido'}
                 </strong>
@@ -1085,11 +1001,11 @@ const TimeSlotsPanel = () => {
               <div key={index} className="time-slot-mini-card">
                 <div className="time-slot-header">
                   <span className="hora">
-                    {event.data?.data_inicio 
-                      ? new Date(event.data.data_inicio).toLocaleTimeString('pt-BR', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })
+                    {event.data?.data_inicio
+                      ? new Date(event.data.data_inicio).toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
                       : 'Sem hora'}
                   </span>
                 </div>

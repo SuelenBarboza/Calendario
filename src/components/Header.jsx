@@ -117,7 +117,7 @@ export default function Header() {
             </a>
             <ul className="submenu">
               <li><a href="http://localhost/Innovatech/Shared/Profile.php">Meu perfil</a></li>
-              <li><a href="http://localhost/Innovatech/Public/Logout.php">Sair</a></li>
+              <li><a href="http://localhost/Innovatech/Config/Logout.php">Sair</a></li>
             </ul>
           </li>
 
