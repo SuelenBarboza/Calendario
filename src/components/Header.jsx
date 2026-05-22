@@ -86,7 +86,9 @@ export default function Header() {
               <a href="#">Gerenciamento</a>
               <ul className="submenu">
                 {tipo === 'Admin' && <li><a href="http://localhost/Innovatech/Shared/UserManagerAdmin.php">Gerenciar Usuários</a></li>}
+                {tipo === 'Admin' && <li><a href="http://localhost/Innovatech/Shared/Logs.php">Gerenciar Logs</a></li>}
                 {tipo === 'Coordenador' && <li><a href="http://localhost/Innovatech/Shared/UserManagerCoord.php">Gerenciar Alunos e Professores</a></li>}
+                
               </ul>
             </li>
           )}
