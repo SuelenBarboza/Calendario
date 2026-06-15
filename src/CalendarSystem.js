@@ -100,19 +100,16 @@ const CalendarSystem = () => {
       // 🔹 Tarefas
       if (Array.isArray(project.tarefas)) {
         project.tarefas.forEach(tarefa => {
-          if (!tarefa?.created_at) return;
+          if (!tarefa?.data_inicio) return;
 
-          const dateKey = tarefa.created_at.split('T')[0] || tarefa.created_at.split(' ')[0];
+          const dateKey = tarefa.data_inicio.split('T')[0] || tarefa.data_inicio.split(' ')[0];
 
           addEvent(dateKey, {
             type: 'task',
             title: tarefa.nome,
             color: '#4299e1',
             data: tarefa,
-            time: new Date(tarefa.created_at).toLocaleTimeString('pt-BR', {
-              hour: '2-digit',
-              minute: '2-digit'
-            })
+            time: ''
           });
         });
       }
